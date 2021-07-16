@@ -1,0 +1,9 @@
+.survey_config #surveytable .lastcol {
+    text-align: right;
+}
+
+.survey_config .info {
+    background: #cce6ea;
+    padding: 10px;
+    margin:  0 0 10px 0;
+}
