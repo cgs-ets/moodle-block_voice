@@ -23,10 +23,17 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_voice\utils;
+use block_voice\forms\survey_form;
+use block_voice\forms\section_form;
+use block_voice\forms\question_form;
+
 // Include required files.
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot.'/blocks/voice/lib.php');
 require_once($CFG->libdir.'/tablelib.php');
+
+$context = context_system::instance();
 
 // Check user is logged in and capable of accessing the survey config.
 require_login();
@@ -35,20 +42,19 @@ require_capability('block/voice:administer', $context);
 // Determine course and context.
 $courseid = 1;
 $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-$context = context_system::instance();
 $action = optional_param('action', '', PARAM_ALPHANUMEXT); // Which page to show.
 $buttonattributes = array('class' => 'btn btn-primary', 'style' => 'margin: 0 0 10px 5px;');
 
 // Set up page parameters.
+$surveyconfigurl = new moodle_url('/blocks/voice/surveyconfig.php', array());
 $PAGE->set_course($course);
-$PAGE->requires->css('/blocks/voice/styles.css');
-$PAGE->set_url('/blocks/voice/surveyconfig.php');
+$PAGE->set_url($surveyconfigurl);
 $PAGE->set_context($context);
 $title = get_string('voicesurveyconfig', 'block_voice');
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
-if (in_array($action, array('questions', 'savequestion', 'savesection', 'deletesection', 'deletequestion'))) {
-    $PAGE->navbar->add(html_writer::link($PAGE->url, $title));
+if ($action == 'questions') {
+    $PAGE->navbar->add($title, $surveyconfigurl);
     $PAGE->navbar->add(get_string('questions', 'block_voice'));
 } else {
     $PAGE->navbar->add($title);
@@ -56,21 +62,21 @@ if (in_array($action, array('questions', 'savequestion', 'savesection', 'deletes
 $PAGE->set_pagelayout('report');
 
 // Start page output.
-echo $OUTPUT->header();
-echo $OUTPUT->container_start('survey_config');
+$output = $OUTPUT->container_start('survey_config');
 
 // Add question.
 if ($action == 'addquestion') {
     $sectionid = required_param('sectionid', PARAM_INT);
     $surveyid = required_param('surveyid', PARAM_INT);
-    echo $OUTPUT->heading(get_string('addquestion', 'block_voice'), 2);
+    $output .= $OUTPUT->heading(get_string('addquestion', 'block_voice'), 2);
     $mform = new question_form(null, array('sectionid' => $sectionid, 'surveyid' => $surveyid));
-    $mform->display();
+    $output .= $mform->render();
 }
 
 // Delete question.
 if ($action == 'deletequestion') {
     $sectionid = required_param('sectionid', PARAM_INT);
+    $surveyid = required_param('surveyid', PARAM_INT);
     $questionid = required_param('questionid', PARAM_INT);
     $params = array('sectionid' => $sectionid);
     $questions = $DB->get_records_sql('SELECT * FROM {block_voice_question} WHERE sectionid = :sectionid', $params);
@@ -82,7 +88,10 @@ if ($action == 'deletequestion') {
                 $DB->update_record('block_voice_question', $question);
             }
         }
-        \core\notification::success(get_string('questiondeletesuccess', 'block_voice', $questions[$questionid]->name));
+        // Redirect back to the questions form.
+        $surveyconfigurl->param('action', 'questions');
+        $surveyconfigurl->param('surveyid', $surveyid);
+        utils::redirect_success($surveyconfigurl, get_string('questiondeletesuccess', 'block_voice', $questions[$questionid]->name));
     }
 }
 
@@ -92,44 +101,56 @@ if ($action == 'editquestion') {
     $surveyid = required_param('surveyid', PARAM_INT);
     $questionid = required_param('questionid', PARAM_INT);
     $params = array('questionid' => $questionid);
-    $questions = $DB->get_records_sql('SELECT * FROM {block_voice_question} WHERE id = :questionid', $params);
-    if ($questions) {
-        echo $OUTPUT->heading(get_string('edit', 'block_voice'), 2);
+    $question = $DB->get_record_sql('SELECT * FROM {block_voice_question} WHERE id = :questionid', $params);
+    if ($question) {
+        $output .= $OUTPUT->heading(get_string('edit', 'block_voice'), 2);
         $mform = new question_form(null, array('sectionid' => $sectionid, 'surveyid' => $surveyid, 'questionid' => $questionid,
-            'questiontext' => $questions[$questionid]->questiontext));
-        $mform->set_data((array) $questions[$questionid]);
-        $mform->display();
+            'questiontext' => $question->questiontext));
+        $mform->set_data($question);
+        $output .= $mform->render();
     }
 }
 
 // Save question.
 if ($action == 'savequestion') {
+    // Set up URL for redirect back to the questions form.
+    $surveyid = required_param('surveyid', PARAM_INT);
+    $surveyconfigurl->param('surveyid', $surveyid);
+    $surveyconfigurl->param('action', 'questions');
+
+    // Get form data.
     $mform = new question_form();
-    if (!$mform->is_cancelled()) {
-        $data = $mform->get_data();
-        $editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'context' => $context);
-        $data = file_postupdate_standard_editor($data, 'questiontext', $editoroptions, $context);
-        if ($data->questionid != '') {
-            $data->id = (int) $data->questionid;
-            $success = $DB->update_record('block_voice_question', $data);
-        } else {
-            $params = array('sectionid' => $data->sectionid);
-            $questions = $DB->get_records_sql('SELECT * FROM {block_voice_question} WHERE sectionid = :sectionid', $params);
-            $data->seq = count($questions) + 1;
-            $success = $DB->insert_record('block_voice_question', $data);
-        }
-        if ($success) {
-            \core\notification::success(get_string('savesuccess', 'block_voice'));
-        }
+    $data = $mform->get_data();
+
+    if ($mform->is_cancelled()) {
+        redirect($surveyconfigurl->out());
+    }
+
+    // Save data.
+    $editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'context' => $context);
+    $data = file_postupdate_standard_editor($data, 'questiontext', $editoroptions, $context);
+    if ($data->questionid != '') {
+        $data->id = (int) $data->questionid;
+        $success = $DB->update_record('block_voice_question', $data);
+    } else {
+        $params = array('sectionid' => $data->sectionid);
+        $questions = $DB->get_records_sql('SELECT * FROM {block_voice_question} WHERE sectionid = :sectionid', $params);
+        $data->seq = count($questions) + 1;
+        $success = $DB->insert_record('block_voice_question', $data);
+    }
+    if ($success) {
+        utils::redirect_success($surveyconfigurl, get_string('savesuccess', 'block_voice'));
     }
 }
 
 // Add section.
 if ($action == 'addsection') {
+    // Required params for this action.
     $surveyid = required_param('surveyid', PARAM_INT);
-    echo $OUTPUT->heading(get_string('addsection', 'block_voice'), 2);
+    // Render the form.
+    $output .= $OUTPUT->heading(get_string('addsection', 'block_voice'), 2);
     $mform = new section_form(null, array('surveyid' => $surveyid));
-    $mform->display();
+    $output .= $mform->render();
 }
 
 // Delete section.
@@ -147,7 +168,10 @@ if ($action == 'deletesection') {
                 $DB->update_record('block_voice_section', $section);
             }
         }
-        \core\notification::success(get_string('sectiondeletesuccess', 'block_voice', $sections[$sectionid]->name));
+        // Redirect back to the questions form.
+        $surveyconfigurl->param('action', 'questions');
+        $surveyconfigurl->param('surveyid', $surveyid);
+        utils::redirect_success($surveyconfigurl, get_string('sectiondeletesuccess', 'block_voice', $sections[$sectionid]->name));
     }
 }
 
@@ -156,39 +180,49 @@ if ($action == 'editsection') {
     $surveyid = required_param('surveyid', PARAM_INT);
     $sectionid = required_param('sectionid', PARAM_INT);
     $params = array('sectionid' => $sectionid);
-    $sections = $DB->get_records_sql('SELECT * FROM {block_voice_section} WHERE sectionid = :sectionid', $params);
-    echo $OUTPUT->heading(get_string('edit', 'block_voice'), 2);
-    if ($sections && $surveyid) {
+    $section = $DB->get_record_sql('SELECT * FROM {block_voice_section} WHERE id = :sectionid', $params);
+    $output .= $OUTPUT->heading(get_string('edit', 'block_voice'), 2);
+    if ($section && $surveyid) {
         $mform = new section_form(null, array('sectionid' => $sectionid, 'surveyid' => $surveyid));
-        $mform->set_data((array) $sections[$sectionid]);
-        $mform->display();
+        $mform->set_data($section);
+        $output .= $mform->render();
     }
 }
 
 // Save section.
 if ($action == 'savesection') {
+    // Set up URL for redirect back to the questions form.
+    $surveyid = required_param('surveyid', PARAM_INT);
+    $surveyconfigurl->param('surveyid', $surveyid);
+    $surveyconfigurl->param('action', 'questions');
+
+    // Get form data.
     $mform = new section_form();
-    if (!$mform->is_cancelled()) {
-        $data = $mform->get_data();
-        if ($data->sectionid != '') {
-            $data->id = (int) $data->sectionid;
-            $success = $DB->update_record('block_voice_section', $data);
-        } else {
-            $params = array('surveyid' => $data->surveyid);
-            $sections = $DB->get_records_sql('SELECT * FROM {block_voice_section} WHERE surveyid = :surveyid', $params);
-            $data->seq = count($sections) + 1;
-            $success = $DB->insert_record('block_voice_section', $data);
-        }
-        if ($success) {
-            \core\notification::success(get_string('savesuccess', 'block_voice'));
-        }
+    $data = $mform->get_data();
+
+    if ($mform->is_cancelled()) {
+        redirect($surveyconfigurl->out());
+    }
+
+    // Save data.
+    if ($data->sectionid != '') {
+        $data->id = (int) $data->sectionid;
+        $success = $DB->update_record('block_voice_section', $data);
+    } else {
+        $params = array('surveyid' => $data->surveyid);
+        $sections = $DB->get_records_sql('SELECT * FROM {block_voice_section} WHERE surveyid = :surveyid', $params);
+        $data->seq = count($sections) + 1;
+        $success = $DB->insert_record('block_voice_section', $data);
+    }
+    if ($success) {
+        utils::redirect_success($surveyconfigurl, get_string('savesuccess', 'block_voice'));
     }
 }
 
 // Add / Edit sections and questions.
-if (in_array($action, array('questions', 'savequestion', 'savesection', 'deletesection', 'deletequestion'))) {
-    echo $OUTPUT->heading(get_string('questions', 'block_voice'), 2);
-    echo $OUTPUT->container(INFO . ' ' . get_string('sectionnote', 'block_voice') . ' ' .
+if ($action == 'questions') {
+    $output .= $OUTPUT->heading(get_string('questions', 'block_voice'), 2);
+    $output .= $OUTPUT->container(INFO . ' ' . get_string('sectionnote', 'block_voice') . ' ' .
         get_string('questionnote', 'block_voice'), 'info');
 
     // Get data.
@@ -218,7 +252,7 @@ if (in_array($action, array('questions', 'savequestion', 'savesection', 'deletes
             $deletelink = html_writer::link($url, TRASH);
             $url->param('action', 'editsection');
             $editlink = html_writer::link($url, COG);
-            echo $OUTPUT->heading(format_string($section->name) . ' ' . $deletelink . ' ' . $editlink, 3);
+            $output .= $OUTPUT->heading(format_string($section->name) . ' ' . $deletelink . ' ' . $editlink, 3);
 
             // Show questions within this section.
             $table = new html_table();
@@ -239,7 +273,7 @@ if (in_array($action, array('questions', 'savequestion', 'savesection', 'deletes
                 }
             }
             if (!empty($table->data)) {
-                echo $OUTPUT->container(html_writer::table($table));
+                $output .= $OUTPUT->container(html_writer::table($table));
             }
 
             // Show link to add a new question.
@@ -247,38 +281,38 @@ if (in_array($action, array('questions', 'savequestion', 'savesection', 'deletes
             $url->param('action', 'addquestion');
             $url->param('sectionid', $sectionid);
             $url->param('surveyid', $surveyid);
-            echo $OUTPUT->container(html_writer::link($url, PLUS.'&nbsp;'.get_string('addquestion', 'block_voice'),
+            $output .= $OUTPUT->container(html_writer::link($url, PLUS.'&nbsp;'.get_string('addquestion', 'block_voice'),
                 $buttonattributes));
-            echo html_writer::empty_tag('hr');
+            $output .= html_writer::empty_tag('hr');
         }
     } else {
-        echo $OUTPUT->container(html_writer::tag('p', get_string('nosections', 'block_voice')));
+        $output .= $OUTPUT->container(html_writer::tag('p', get_string('nosections', 'block_voice')));
     }
 
     // Show link to add a new section.
     $url = clone($PAGE->url);
     $url->param('action', 'addsection');
     $url->param('surveyid', $surveyid);
-    echo $OUTPUT->container(html_writer::link($url, PLUS.'&nbsp;'.get_string('addsection', 'block_voice'), $buttonattributes));
+    $output .= $OUTPUT->container(html_writer::link($url, PLUS.'&nbsp;'.get_string('addsection', 'block_voice'), $buttonattributes));
 }
 
 // Show the form to add a new survey.
 if ($action == 'add') {
-    echo $OUTPUT->heading(get_string('addsurvey', 'block_voice'), 2);
+    $output .= $OUTPUT->heading(get_string('addsurvey', 'block_voice'), 2);
     $mform = new survey_form();
-    $mform->display();
+    $output .= $mform->render();
 }
 
 // Show the form to edit a survey.
 if ($action == 'edit') {
     $surveyid = required_param('surveyid', PARAM_INT);
-    echo $OUTPUT->heading(get_string('edit', 'block_voice'), 2);
-    $surveys = $DB->get_records_sql('SELECT * FROM {block_voice_survey} WHERE id = :surveyid ORDER BY seq ASC',
+    $output .= $OUTPUT->heading(get_string('edit', 'block_voice'), 2);
+    $survey = $DB->get_record_sql('SELECT * FROM {block_voice_survey} WHERE id = :surveyid',
         array ('surveyid' => $surveyid));
-    if ($surveys && $surveyid) {
-        $mform = new survey_form(null, array('intro' => $surveys[$surveyid]->intro, 'surveyid' => $surveyid));
-        $mform->set_data((array) $surveys[$surveyid]);
-        $mform->display();
+    if ($survey && $surveyid) {
+        $mform = new survey_form(null, array('intro' => $survey->intro, 'surveyid' => $surveyid));
+        $mform->set_data($survey);
+        $output .= $mform->render();
     }
 }
 
@@ -302,7 +336,7 @@ if ($action == 'delete') {
             }
         }
         if ($success) {
-            \core\notification::success(get_string('surveyundeletesuccess', 'block_voice'));
+            utils::redirect_success($surveyconfigurl, get_string('surveyundeletesuccess', 'block_voice'));
         }
     } else {
 
@@ -320,39 +354,43 @@ if ($action == 'delete') {
         $url->param('action', 'delete');
         $url->param('undo', '1');
         $url->param('seq', $data->seq);
-        $undolink = html_writer::link($url, get_string('undo', 'block_voice'));
         if ($success) {
-            \core\notification::success(get_string('surveydeletesuccess', 'block_voice', $data->name) . ' ' . $undolink);
+            $undolink = html_writer::link($url, get_string('undo', 'block_voice'));
+            utils::redirect_success($surveyconfigurl, get_string('surveydeletesuccess', 'block_voice', $data->name) . ' ' . $undolink);
         }
     }
 }
 
 // Save a new/updated survey form.
 if ($action == 'save') {
-    $surveys = $DB->get_records_sql('SELECT * FROM {block_voice_survey} WHERE active = 1 ORDER BY seq ASC');
+    // Get form data.
     $mform = new survey_form();
-    if (!$mform->is_cancelled()) {
-        $data = $mform->get_data();
-        $data->timemodified = time();
-        $data->active = 1;
-        $editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'context' => $context);
-        $data = file_postupdate_standard_editor($data, 'intro', $editoroptions, $context);
-        if ($data->surveyid != '') {
-            $data->id = (int) $data->surveyid;
-            $success = $DB->update_record('block_voice_survey', $data);
-        } else {
-            $data->seq = count($surveys) + 1;
-            $success = $DB->insert_record('block_voice_survey', $data);
-        }
-        if ($success) {
-            \core\notification::success(get_string('savesuccess', 'block_voice'));
-        }
+    if ($mform->is_cancelled()) {
+        redirect($surveyconfigurl->out());
+    }
+
+    // Save data.
+    $data = $mform->get_data();
+    $data->timemodified = time();
+    $data->active = 1;
+    $editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'context' => $context);
+    $data = file_postupdate_standard_editor($data, 'intro', $editoroptions, $context);
+    if ($data->surveyid != '') {
+        $data->id = (int) $data->surveyid;
+        $success = $DB->update_record('block_voice_survey', $data);
+    } else {
+        $surveys = $DB->get_records_sql('SELECT * FROM {block_voice_survey} WHERE active = 1 ORDER BY seq ASC');
+        $data->seq = count($surveys) + 1;
+        $success = $DB->insert_record('block_voice_survey', $data);
+    }
+    if ($success) {
+        utils::redirect_success($surveyconfigurl, get_string('savesuccess', 'block_voice'));
     }
 }
 
 // Output the surveys.
 if ($action == '' || $action == 'save' || $action == 'delete') {
-    echo $OUTPUT->heading($title, 2);
+    $output .= $OUTPUT->heading($title, 2);
     $surveys = $DB->get_records_sql('SELECT * FROM {block_voice_survey} WHERE active = 1 ORDER BY seq ASC');
 
     // Show list of surveys.
@@ -373,14 +411,16 @@ if ($action == '' || $action == 'save' || $action == 'delete') {
             $buttons .= html_writer::link($url, COG . '&nbsp;' . get_string('edit', 'block_voice'), $buttonattributes) . ' ';
             $table->data[] = array($survey->name . ' ' . $format . ' ' . $visibility, $buttons);
         }
-        echo $OUTPUT->container(html_writer::table($table));
+        $output .= $OUTPUT->container(html_writer::table($table));
     } else {
-        echo $OUTPUT->container(html_writer::tag('p', get_string('nosurveys', 'block_voice')));
+        $output .= $OUTPUT->container(html_writer::tag('p', get_string('nosurveys', 'block_voice')));
     }
 
     // Show link to add a new survey.
     $url = clone($PAGE->url);
     $url->param('action', 'add');
-    echo $OUTPUT->container(html_writer::link($url, PLUS.'&nbsp;'.get_string('addsurvey', 'block_voice'), $buttonattributes));
+    $output .= $OUTPUT->container(html_writer::link($url, PLUS.'&nbsp;'.get_string('addsurvey', 'block_voice'), $buttonattributes));
 }
 
+echo $OUTPUT->header();
+echo $output;

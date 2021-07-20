@@ -42,7 +42,7 @@ class block_voice_edit_form extends block_edit_form {
 
         $sitecontext = CONTEXT::instance_by_id(CONTEXT_SYSTEM);
         if (has_capability('block/voice:administer', $sitecontext)) {
-            $mform->addElement('static', '', '', '<a href="'.$CFG->wwwroot.'/blocks/voice/surveyconfig.php">'.
+            $mform->addElement('static', '', '', '<a target="_blank" href="'.$CFG->wwwroot.'/blocks/voice/surveyconfig.php">'.
                 get_string('voicesurveyconfig', 'block_voice').'</a>');
         }
 
