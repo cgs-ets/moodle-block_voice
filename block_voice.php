@@ -148,16 +148,5 @@ class block_voice extends block_base {
         return $this->content;
     }
 
-    /**
-     * Store instance config and write selected survey questions to tables.
-     */
-    function instance_config_save($data, $nolongerused = false) {
-        global $DB;
 
-        var_export($data); exit;
-
-        // TODO: Save survey configuration to tables.
-
-        parent::instance_config_save($data, $nolongerused);
-    }
 }

@@ -30,7 +30,7 @@ require_once($CFG->dirroot.'/blocks/voice/lib.php');
 /**
  * Student Voice block config form class
  *
- * @copyright 2021 Michael de Raadt
+ * @copyright 2021 Michael de Raadt, Michael Vangelovski
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class block_voice_edit_form extends block_edit_form {
@@ -95,26 +95,90 @@ class block_voice_edit_form extends block_edit_form {
         }
         $mform->addElement('select', 'config_survey', get_string('survey', 'block_voice'), $selectablesurveys);
 
-        $firstsurvey = array_key_last($surveys);
-        $surveyid = $firstsurvey;
+        //echo "<pre>"; var_export($this->block->config); exit;
+
+        // Get survey sections/questions.
+        if (empty($this->block->config->survey)) {
+            return;
+        }
+
+        $surveyid = $this->block->config->survey;
         $sections = block_voice_get_sections($surveyid);
         $questions = block_voice_get_questions($surveyid);
 
         foreach ($sections as $sectionid => $section) {
-
             // Add section heading.
             $mform->addElement('header', 'configheader', format_string($section->name));
 
             // Show questions.
             foreach ($questions as $id => $question) {
                 if ($question->sectionid == $section->id) {
-                    $mform->addElement('advcheckbox', $question->id, format_string($question->name), '',
+                    $mform->addElement('advcheckbox', 'question_' . $question->id, format_string($question->name), '',
                         $question->mandatory ? array('disabled' => 'true') : '', array(0, 1));
                     if ($question->mandatory) {
-                        $mform->setDefault($question->id, 1);
+                        $mform->setDefault('question_' . $question->id, 1);
                     }
                 }
             }
         }
     }
+
+
+
+
+
+
+    /**
+     * Return submitted data.
+     *
+     * @return object submitted data.
+     */
+    public function get_data() {
+        $data = parent::get_data();
+
+        if (empty($data)) {
+            return $data;
+        }
+
+        echo "<pre>"; var_export($data); exit;
+
+        $questions = array();
+        foreach((array) $data as $field => $selected) {
+            if (preg_match('/^(question_)(\d)$/', $field, $matches)) {
+                if ($selected) {
+                    $questions[] = $matches[2]; // Question id.
+                }
+            }
+        }
+        
+        // Create a teachersurvey.
+        
+
+        return $data;
+    }
+
+
+
+
+
+    /**
+     * Set form data.
+     *
+     * @param array $defaults
+     * @return void
+     */
+    public function set_data($defaults) {
+        // Set form data.
+        parent::set_data($defaults);
+    }
+
+
+
+
+
+
+
+
+
+
 }

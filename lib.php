@@ -89,8 +89,11 @@ function block_voice_get_questions($surveyid) {
         return [];
     }
 
-    list($insql, $inparams) = $DB->get_in_or_equal($sections);
-    $sql = "SELECT * from {block_voice_question} WHERE sectionid $insql ORDER BY seq ASC";
+    list($insql, $inparams) = $DB->get_in_or_equal(array_column($sections, 'id'));
+    $sql = "SELECT *
+              FROM {block_voice_question}
+             WHERE sectionid $insql
+          ORDER BY seq ASC";
     $questions = $DB->get_records_sql($sql, $inparams);
     if (empty($questions)) {
         return [];
