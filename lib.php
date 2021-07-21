@@ -18,7 +18,7 @@
  * Student Voice block common configuration and helper functions
  *
  * @package    block_voice
- * @copyright  2021 Michael de Raadt
+ * @copyright  2021 Michael de Raadt, Michael Vangelovski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -28,15 +28,6 @@ require_once($CFG->libdir.'/formslib.php');
 // Global defaults.
 const SURVEY_FORMAT_LIKERT = 0;
 const SURVEY_FORMAT_THUMBS = 1;
-const EYE_OPEN = '<i class="fa fa-eye"></i>';
-const EYE_CLOSED = '<i class="fa fa-eye-slash"></i>';
-const PLUS = '<i class="fa fa-plus-circle"></i>';
-const COG = '<i class="fa fa-cog"></i>';
-const TRASH = '<i class="fa fa-trash-o"></i>';
-const THUMB = '<i class="fa fa-thumbs-o-up"></i>';
-const ELIPSIS = '<i class="fa fa-ellipsis-h"></i>';
-const LOCK = '<i class="fa fa-lock"></i>';
-const INFO = '<i class="fa  fa-info-circle"></i>';
 
 /**
  * Get all surveys.

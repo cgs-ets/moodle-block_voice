@@ -19,7 +19,7 @@
  * Student Voice survey configuration page
  *
  * @package    block_voice
- * @copyright  2021 Michael de Raadt
+ * @copyright  2021 Michael de Raadt, Michael Vangelovski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -31,7 +31,6 @@ use block_voice\forms\question_form;
 // Include required files.
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot.'/blocks/voice/lib.php');
-require_once($CFG->libdir.'/tablelib.php');
 
 $context = context_system::instance();
 
@@ -221,10 +220,6 @@ if ($action == 'savesection') {
 
 // Add / Edit sections and questions.
 if ($action == 'questions') {
-    $output .= $OUTPUT->heading(get_string('questions', 'block_voice'), 2);
-    $output .= $OUTPUT->container(INFO . ' ' . get_string('sectionnote', 'block_voice') . ' ' .
-        get_string('questionnote', 'block_voice'), 'info');
-
     // Get data.
     $surveyid = required_param('surveyid', PARAM_INT);
     $sections = $DB->get_records_sql('SELECT * FROM {block_voice_section} WHERE surveyid = :surveyid ORDER BY seq ASC',
@@ -239,61 +234,65 @@ if ($action == 'questions') {
     } else {
         $questions = array();
     }
-    $url = clone($PAGE->url);
-    $rowbuttonattributes = $buttonattributes;
-    $rowbuttonattributes['style'] = 'margin: 0 0 0 5px;';
 
     // Show list of sections.
+    $templatedata = array();
     if ($sections) {
+        $templatedata['sections'] = array();
         foreach ($sections as $sectionid => $section) {
-            $url->param('surveyid', $surveyid);
-            $url->param('sectionid', $sectionid);
-            $url->param('action', 'deletesection');
-            $deletelink = html_writer::link($url, TRASH);
-            $url->param('action', 'editsection');
-            $editlink = html_writer::link($url, COG);
-            $output .= $OUTPUT->heading(format_string($section->name) . ' ' . $deletelink . ' ' . $editlink, 3);
-
             // Show questions within this section.
-            $table = new html_table();
-            $table->id = 'surveytable';
-            $table->attributes = array('class' => 'table');
+            $sectionquestions = array();
             foreach ($questions as $questionid => $question) {
                 if ($question->sectionid == $sectionid) {
-                    $mandatory = $question->mandatory ? LOCK : '';
                     $url = clone($PAGE->url);
                     $url->param('surveyid', $surveyid);
                     $url->param('sectionid', $question->sectionid);
                     $url->param('questionid', $question->id);
                     $url->param('action', 'deletequestion');
-                    $buttons = html_writer::link($url, TRASH, $rowbuttonattributes) .' ';
+                    $deleteurl = $url->out(false);
                     $url->param('action', 'editquestion');
-                    $buttons .= html_writer::link($url, COG, $rowbuttonattributes) . ' ';
-                    $table->data[] = array($question->name . ' ' . $mandatory, $buttons);
+                    $editurl = $url->out(false);
+                    $sectionquestions[] = array(
+                        'name' => $question->name,
+                        'mandatory' => $question->mandatory,
+                        'deleteurl' => $deleteurl,
+                        'editurl' => $editurl,
+                    );
                 }
             }
-            if (!empty($table->data)) {
-                $output .= $OUTPUT->container(html_writer::table($table));
-            }
 
-            // Show link to add a new question.
+            // Create links.
             $url = clone($PAGE->url);
-            $url->param('action', 'addquestion');
-            $url->param('sectionid', $sectionid);
             $url->param('surveyid', $surveyid);
-            $output .= $OUTPUT->container(html_writer::link($url, PLUS.'&nbsp;'.get_string('addquestion', 'block_voice'),
-                $buttonattributes));
-            $output .= html_writer::empty_tag('hr');
+            $url->param('sectionid', $sectionid);
+            $url->param('action', 'deletesection');
+            $sectiondeleteurl = $url->out(false);
+            $url->param('action', 'editsection');
+            $sectionediturl = $url->out(false);
+            $url->param('action', 'addsection');
+            $addsectionurl = $url->out(false);
+            $url->param('action', 'addquestion');
+            $addquestionurl = $url->out(false);
+
+            // Add section data for template.
+            $templatedata['sections'][] = array(
+                'name' => format_string($section->name),
+                'editurl' => $sectionediturl,
+                'deleteurl' => $sectiondeleteurl,
+                'addsectionurl' => $addsectionurl,
+                'addquestionurl' => $addquestionurl,
+                'questions' => $sectionquestions,
+            );
         }
-    } else {
-        $output .= $OUTPUT->container(html_writer::tag('p', get_string('nosections', 'block_voice')));
     }
 
     // Show link to add a new section.
     $url = clone($PAGE->url);
     $url->param('action', 'addsection');
     $url->param('surveyid', $surveyid);
-    $output .= $OUTPUT->container(html_writer::link($url, PLUS.'&nbsp;'.get_string('addsection', 'block_voice'), $buttonattributes));
+    $templatedata['addsectionurl'] = $url->out(false);
+
+    $output .= $OUTPUT->render_from_template('block_voice/config_questions', $templatedata);
 }
 
 // Show the form to add a new survey.
@@ -389,37 +388,46 @@ if ($action == 'save') {
 }
 
 // Output the surveys.
-if ($action == '' || $action == 'save' || $action == 'delete') {
-    $output .= $OUTPUT->heading($title, 2);
+if ($action == '') {
     $surveys = $DB->get_records_sql('SELECT * FROM {block_voice_survey} WHERE active = 1 ORDER BY seq ASC');
 
     // Show list of surveys.
+    $templatedata = array();
     if ($surveys) {
-        $table = new html_table();
-        $table->id = 'surveytable';
-        $table->attributes = array('class' => 'table');
+        $templatedata['surveys'] = array();
         foreach ($surveys as $id => $survey) {
-            $format = $survey->format == SURVEY_FORMAT_LIKERT ? ELIPSIS : THUMB;
-            $visibility = $survey->visible ? EYE_OPEN : EYE_CLOSED;
             $url = clone($PAGE->url);
             $url->param('surveyid', $survey->id);
             $url->param('action', 'questions');
-            $buttons = html_writer::link($url, PLUS . '&nbsp;' . get_string('questions', 'block_voice'), $buttonattributes) .' ';
+            $questionsurl = $url->out(false);
+
             $url->param('action', 'delete');
-            $buttons .= html_writer::link($url, TRASH . '&nbsp;' . get_string('delete', 'block_voice'), $buttonattributes) .' ';
+            $deleteurl = $url->out(false);
+
             $url->param('action', 'edit');
-            $buttons .= html_writer::link($url, COG . '&nbsp;' . get_string('edit', 'block_voice'), $buttonattributes) . ' ';
-            $table->data[] = array($survey->name . ' ' . $format . ' ' . $visibility, $buttons);
+            $editurl = $url->out(false);
+
+            // Add survey data for template.
+            $templatedata['surveys'][] = array(
+                'name' => $survey->name,
+                'likert' => $survey->format == SURVEY_FORMAT_LIKERT,
+                'thumbs' => $survey->format == SURVEY_FORMAT_THUMBS,
+                'visible' => $survey->visible,
+                'questionsurl' => $questionsurl,
+                'deleteurl' => $deleteurl,
+                'editurl' => $editurl,
+            );
+
         }
-        $output .= $OUTPUT->container(html_writer::table($table));
-    } else {
-        $output .= $OUTPUT->container(html_writer::tag('p', get_string('nosurveys', 'block_voice')));
     }
 
     // Show link to add a new survey.
     $url = clone($PAGE->url);
     $url->param('action', 'add');
-    $output .= $OUTPUT->container(html_writer::link($url, PLUS.'&nbsp;'.get_string('addsurvey', 'block_voice'), $buttonattributes));
+    $templatedata['addsurveyurl'] = $url->out(false);
+    $templatedata['title'] = $title;
+
+    $output .= $OUTPUT->render_from_template('block_voice/config_surveys', $templatedata);
 }
 
 echo $OUTPUT->header();
