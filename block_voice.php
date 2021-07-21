@@ -154,8 +154,10 @@ class block_voice extends block_base {
     function instance_config_save($data, $nolongerused = false) {
         global $DB;
 
+        var_export($data); exit;
+
         // TODO: Save survey configuration to tables.
 
-        $parent->instance_config_save($data, $nolongerused);
+        parent::instance_config_save($data, $nolongerused);
     }
 }

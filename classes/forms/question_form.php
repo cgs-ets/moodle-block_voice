@@ -54,12 +54,12 @@ class question_form extends \moodleform {
         $mform->addRule('name', get_string('required'), 'required', null, 'client');
 
         // Add question text editor.
-        $context = \context_system::instance();
-        $editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'context' => $context, 'elementid' => time());
-        $mform->addElement('editor', 'questiontext_editor', get_string('questiontext', 'block_voice'), null, $editoroptions);
-        $mform->setType('questiontext_editor', PARAM_CLEANHTML);
-        $mform->setDefault('questiontext_editor', array('text' => $questiontext, null));
-        $mform->addRule('questiontext_editor', get_string('required'), 'required', null, 'client');
+        $type = 'editor';
+        $name = 'questiontext';
+        $title = get_string('questiontext', 'block_voice');
+        $mform->addElement($type, $name, $title, null, static::editor_options());
+        $mform->setType($name, PARAM_CLEANHTML);
+        $mform->addRule($name, get_string('required'), 'required', null, 'client');
 
         // Add mandatory control.
         $mandatorycheckbox = array (
@@ -78,5 +78,18 @@ class question_form extends \moodleform {
 
     public function validation($data, $files) {
         return array();
+    }
+
+    /**
+     * Returns the options array to use in editor
+     *
+     * @return array
+     */
+    public static function editor_options() {
+        return array(
+            'maxfiles' => EDITOR_UNLIMITED_FILES, 
+            'context' => \context_system::instance(), 
+            'elementid' => time()
+        );
     }
 }

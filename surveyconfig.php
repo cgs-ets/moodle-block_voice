@@ -60,8 +60,8 @@ if ($action == 'questions') {
 }
 $PAGE->set_pagelayout('report');
 
-// Start page output.
-$output = $OUTPUT->container_start('survey_config');
+// Page output.
+$output = '';
 
 // Add question.
 if ($action == 'addquestion') {
@@ -103,8 +103,20 @@ if ($action == 'editquestion') {
     $question = $DB->get_record_sql('SELECT * FROM {block_voice_question} WHERE id = :questionid', $params);
     if ($question) {
         $output .= $OUTPUT->heading(get_string('edit', 'block_voice'), 2);
-        $mform = new question_form(null, array('sectionid' => $sectionid, 'surveyid' => $surveyid, 'questionid' => $questionid,
-            'questiontext' => $question->questiontext));
+        
+        // Instantiate question form.
+        $mform = new question_form(null, array('sectionid' => $sectionid, 'surveyid' => $surveyid, 'questionid' => $questionid));
+        
+        // Set up text editor.
+        $draftideditor = file_get_submitted_draft_itemid('questiontext');
+        $editoroptions = question_form::editor_options();
+        $text = file_prepare_draft_area($draftideditor, $context->id, 'block_voice', 'questiontext', $questionid, $editoroptions, $question->questiontext);
+        $question->questiontext = array(
+            'text' => $text,
+            'format' => editors_get_preferred_format(),
+            'itemid' => $draftideditor
+        );
+
         $mform->set_data($question);
         $output .= $mform->render();
     }
@@ -119,24 +131,39 @@ if ($action == 'savequestion') {
 
     // Get form data.
     $mform = new question_form();
-    $data = $mform->get_data();
-
     if ($mform->is_cancelled()) {
         redirect($surveyconfigurl->out());
     }
 
-    // Save data.
-    $editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'context' => $context);
-    $data = file_postupdate_standard_editor($data, 'questiontext', $editoroptions, $context);
-    if ($data->questionid != '') {
-        $data->id = (int) $data->questionid;
-        $success = $DB->update_record('block_voice_question', $data);
-    } else {
+    $data = $mform->get_data();
+    $editor = $data->questiontext;
+
+    // If new questions create initial record.
+    if ($data->questionid == '') {
         $params = array('sectionid' => $data->sectionid);
         $questions = $DB->get_records_sql('SELECT * FROM {block_voice_question} WHERE sectionid = :sectionid', $params);
         $data->seq = count($questions) + 1;
-        $success = $DB->insert_record('block_voice_question', $data);
+        $data->questiontext = ''; // Initially blank until editor is processed with new questionid.
+        $data->questionid = $DB->insert_record('block_voice_question', $data);
     }
+
+    $data->id = (int) $data->questionid;
+
+    // Store editor files to permanent file area and get text.
+    $context = \context_system::instance();
+    $data->questiontext = file_save_draft_area_files(
+        $editor['itemid'], 
+        $context->id, 
+        'block_voice', 
+        'questiontext', 
+        $data->id, 
+        question_form::editor_options(), 
+        $editor['text'],
+    );
+
+    // Save data.
+    $success = $DB->update_record('block_voice_question', $data);
+
     if ($success) {
         utils::redirect_success($surveyconfigurl, get_string('savesuccess', 'block_voice'));
     }
@@ -305,11 +332,23 @@ if ($action == 'add') {
 // Show the form to edit a survey.
 if ($action == 'edit') {
     $surveyid = required_param('surveyid', PARAM_INT);
-    $output .= $OUTPUT->heading(get_string('edit', 'block_voice'), 2);
     $survey = $DB->get_record_sql('SELECT * FROM {block_voice_survey} WHERE id = :surveyid',
         array ('surveyid' => $surveyid));
+    $output .= $OUTPUT->heading(get_string('edit', 'block_voice'), 2);
     if ($survey && $surveyid) {
-        $mform = new survey_form(null, array('intro' => $survey->intro, 'surveyid' => $surveyid));
+        // Instantiate survey form.
+        $mform = new survey_form(null, array('surveyid' => $surveyid));
+
+        // Set up text editor.
+        $draftideditor = file_get_submitted_draft_itemid('intro');
+        $editoroptions = survey_form::editor_options();
+        $text = file_prepare_draft_area($draftideditor, $context->id, 'block_voice', 'intro', $surveyid, $editoroptions, $survey->intro);
+        $survey->intro = array(
+            'text' => $text,
+            'format' => editors_get_preferred_format(),
+            'itemid' => $draftideditor
+        );
+
         $mform->set_data($survey);
         $output .= $mform->render();
     }
@@ -368,20 +407,36 @@ if ($action == 'save') {
         redirect($surveyconfigurl->out());
     }
 
-    // Save data.
+    // Get form data.
     $data = $mform->get_data();
     $data->timemodified = time();
     $data->active = 1;
-    $editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'context' => $context);
-    $data = file_postupdate_standard_editor($data, 'intro', $editoroptions, $context);
-    if ($data->surveyid != '') {
-        $data->id = (int) $data->surveyid;
-        $success = $DB->update_record('block_voice_survey', $data);
-    } else {
+    $editor = $data->intro;
+
+    // If new survey, create initial record.
+    if ($data->surveyid == '') {
         $surveys = $DB->get_records_sql('SELECT * FROM {block_voice_survey} WHERE active = 1 ORDER BY seq ASC');
         $data->seq = count($surveys) + 1;
-        $success = $DB->insert_record('block_voice_survey', $data);
+        $data->intro = ''; // Initially blank until editor is processed with new surveyid.
+        $data->surveyid = $DB->insert_record('block_voice_survey', $data);
     }
+
+    $data->id = (int) $data->surveyid;
+
+    // Store editor files to permanent file area and get text.
+    $context = \context_system::instance();
+    $data->intro = file_save_draft_area_files(
+        $editor['itemid'], 
+        $context->id, 
+        'block_voice', 
+        'intro', 
+        $data->id, 
+        survey_form::editor_options(), 
+        $editor['text'],
+    );
+
+    // Save data.
+    $success = $DB->update_record('block_voice_survey', $data);
     if ($success) {
         utils::redirect_success($surveyconfigurl, get_string('savesuccess', 'block_voice'));
     }
@@ -432,3 +487,4 @@ if ($action == '') {
 
 echo $OUTPUT->header();
 echo $output;
+echo $OUTPUT->footer();
