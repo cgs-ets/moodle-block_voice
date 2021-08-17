@@ -49,7 +49,7 @@
         <INDEX NAME="section" UNIQUE="false" FIELDS="sectionid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="block_voice_teachersurvey" COMMENT="A configuration of a survey for a teacher">
+    <!-- <TABLE NAME="block_voice_teachersurvey" COMMENT="A configuration of a survey for a teacher">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="blockinstanceid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
@@ -72,21 +72,22 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
-    </TABLE>
+    </TABLE> --> 
     <TABLE NAME="block_voice_surveyresponse" COMMENT="A response to a survey">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="teachersurveyid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="blockinstanceid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="timestarted" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timecompleted" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="timeupdated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="survey" UNIQUE="false" FIELDS="teachersurveyid"/>
+        <INDEX NAME="blockinstanceid" UNIQUE="false" FIELDS="blockinstanceid"/>
+        <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="block_voice_questionresponse" COMMENT="A response to a survey question">
@@ -96,13 +97,14 @@
         <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="responsevalue" TYPE="int" LENGTH="10" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="surveyresponse" UNIQUE="false" FIELDS="surveyresponseid"/>
-        <INDEX NAME="question" UNIQUE="false" FIELDS="questionid"/>
+        <INDEX NAME="surveyresponseid" UNIQUE="false" FIELDS="surveyresponseid"/>
+        <INDEX NAME="questionid" UNIQUE="false" FIELDS="questionid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

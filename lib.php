@@ -43,7 +43,7 @@ function block_voice_get_surveys($hidden = false) {
         $where = "WHERE visible = 1";
     }
 
-    $surveys = $DB->get_records_sql("SELECT * FROM {block_voice_survey} $where ORDER BY seq ASC");
+    $surveys = array_values($DB->get_records_sql("SELECT * FROM {block_voice_survey} $where ORDER BY seq ASC"));
 
     return $surveys;
 }
@@ -66,7 +66,7 @@ function block_voice_get_sections($surveyid) {
              WHERE surveyid = ?
           ORDER BY seq ASC";
 
-    $sections = $DB->get_records_sql($sql, array($surveyid));
+    $sections = array_values($DB->get_records_sql($sql, array($surveyid)));
 
     if (empty($sections)) {
         return [];
@@ -81,7 +81,29 @@ function block_voice_get_sections($surveyid) {
  * @param int surveyid ID for survey containing questions
  * @return array of questions
  */
-function block_voice_get_questions($surveyid) {
+function block_voice_get_questions_by_section($sectionid) {
+    global $DB;
+
+    $sql = "SELECT *
+              FROM {block_voice_question}
+             WHERE sectionid  = ?
+          ORDER BY seq ASC";
+    $params = array($sectionid);
+    $questions = array_values($DB->get_records_sql($sql, $params));
+    if (empty($questions)) {
+        return [];
+    }
+
+    return $questions;
+}
+
+/**
+ * Get survey questions.
+ *
+ * @param int surveyid ID for survey containing questions
+ * @return array of questions
+ */
+function block_voice_get_questions_by_survey($surveyid) {
     global $DB;
 
     $sections = block_voice_get_sections($surveyid);
@@ -94,7 +116,7 @@ function block_voice_get_questions($surveyid) {
               FROM {block_voice_question}
              WHERE sectionid $insql
           ORDER BY seq ASC";
-    $questions = $DB->get_records_sql($sql, $inparams);
+    $questions = array_values($DB->get_records_sql($sql, $inparams));
     if (empty($questions)) {
         return [];
     }

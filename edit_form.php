@@ -27,6 +27,8 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot.'/blocks/voice/lib.php');
 
+use \block_voice\controllers\editform;
+
 /**
  * Student Voice block config form class
  *
@@ -36,7 +38,12 @@ require_once($CFG->dirroot.'/blocks/voice/lib.php');
 class block_voice_edit_form extends block_edit_form {
 
     protected function specific_definition($mform) {
-        global $COURSE, $OUTPUT, $CFG, $DB;
+        global $COURSE, $OUTPUT, $CFG, $DB, $PAGE;
+
+        // Add js to load questions.
+        $PAGE->requires->js_call_amd('block_voice/editform', 'init', [
+            'instanceid' => $this->block->instance->id,
+        ]);
 
         // TODO: Lock form controls when at least one student has completed the survey.
 
@@ -87,44 +94,19 @@ class block_voice_edit_form extends block_edit_form {
         $mform->addElement('select', 'config_group', get_string('group', 'block_voice'), $groupstodisplay);
 
         // Choose survey.
-        // TODO: Update the questions form when user changes the survey.
         $surveys = block_voice_get_surveys();
         $selectablesurveys = array();
-        foreach ($surveys as $id => $survey) {
-            $selectablesurveys[$id] = $survey->name;
+        foreach ($surveys as $survey) {
+            $selectablesurveys[$survey->id] = $survey->name;
         }
         $mform->addElement('select', 'config_survey', get_string('survey', 'block_voice'), $selectablesurveys);
 
-        //echo "<pre>"; var_export($this->block->config); exit;
+        // Survey sections/questions. Loaded via ajax.
+        $mform->addElement('html', '<questions></questions>');
+        $mform->addElement('hidden', 'config_questionscsv');
+        $mform->setType('config_questionscsv', PARAM_TEXT);
 
-        // Get survey sections/questions.
-        if (empty($this->block->config->survey)) {
-            return;
-        }
-
-        $surveyid = $this->block->config->survey;
-        $sections = block_voice_get_sections($surveyid);
-        $questions = block_voice_get_questions($surveyid);
-
-        foreach ($sections as $sectionid => $section) {
-            // Add section heading.
-            $mform->addElement('header', 'configheader', format_string($section->name));
-
-            // Show questions.
-            foreach ($questions as $id => $question) {
-                if ($question->sectionid == $section->id) {
-                    $mform->addElement('advcheckbox', 'question_' . $question->id, format_string($question->name), '',
-                        $question->mandatory ? array('disabled' => 'true') : '', array(0, 1));
-                    if ($question->mandatory) {
-                        $mform->setDefault('question_' . $question->id, 1);
-                    }
-                }
-            }
-        }
     }
-
-
-
 
 
 
@@ -140,19 +122,8 @@ class block_voice_edit_form extends block_edit_form {
             return $data;
         }
 
-        echo "<pre>"; var_export($data); exit;
-
-        $questions = array();
-        foreach((array) $data as $field => $selected) {
-            if (preg_match('/^(question_)(\d)$/', $field, $matches)) {
-                if ($selected) {
-                    $questions[] = $matches[2]; // Question id.
-                }
-            }
-        }
-        
-        // Create a teachersurvey.
-        
+        // Do something with the submitted form data.
+        //echo "<pre>"; var_export($data); exit;
 
         return $data;
     }

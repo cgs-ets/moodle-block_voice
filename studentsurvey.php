@@ -52,4 +52,4 @@ echo $OUTPUT->header();
 echo $OUTPUT->container_start('survey_config');
 */
 // TODO: Show the survey to students and capture results.
-}
+

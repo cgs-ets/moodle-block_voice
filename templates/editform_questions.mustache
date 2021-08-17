@@ -1,0 +1,67 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+    @package   block_voice
+    @copyright 2021 Michael Vangelovski
+    @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+{{!
+    @template block_voice/editform_questions
+
+    Template for the questions config page.
+}}
+{{#sections}}
+    <fieldset class="clearfix collapsible" id="id_sectionheader-{{id}}">
+        <legend class="ftoggler"><a href="#" class="fheader" role="button" aria-controls="id_sectionheader-{{id}}" aria-expanded="true">{{name}}</a></legend>
+        <div class="fcontainer clearfix">
+            {{#questions}}
+                <div class="form-group row fitem">
+                    <div class="col-md-3"></div>
+                    <div class="col-md-9 checkbox">
+                        <div class="form-check">
+                            <label>
+                                <input type="checkbox" name="question_{{id}}" class="form-check-input question" value="{{id}}" id="id_question_{{id}}" {{#checked}}checked="checked"{{/checked}} {{#mandatory}}disabled="true"{{/mandatory}}>
+                                {{name}}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            {{/questions}}
+            {{^questions.0}}
+                <div class="form-group row fitem">
+                    <div class="col-md-3"></div>
+                    <div class="col-md-9">
+                        <p>No questions have been configured for this section.</p>
+                    </div>
+                </div>
+            {{/questions.0}}
+        </div>
+    </fieldset>
+{{/sections}}
+{{^sections.0}}
+    <fieldset class="clearfix collapsible" id="id_sectionsheader">
+        <legend class="ftoggler"><a href="#" class="fheader" role="button" aria-controls="id_sectionsheader" aria-expanded="true">Sections</a></legend>
+        <div class="fcontainer clearfix">
+            <div class="form-group row fitem">
+                <div class="col-md-3"></div>
+                <div class="col-md-9">
+                    <p>No questions have been configured for this survey.</p>
+                </div>
+            </div>
+        
+        </div>
+    </fieldset>
+{{/sections.0}}
