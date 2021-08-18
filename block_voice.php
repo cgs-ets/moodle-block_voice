@@ -143,7 +143,7 @@ class block_voice extends block_base {
             if ($show) {
                 // Show completed indicator or button to survey.
 
-                $this->content->text .= survey::get_block_student_view($this->instance->id, $USER->id);
+                $this->content->text .= survey::get_block_html_for_student($this->instance->id, $USER->id);
 
             }
         }

@@ -28,6 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot.'/blocks/voice/lib.php');
 
 use \block_voice\controllers\setup;
+use \moodle_url;
 
 /**
  * Survey controller.
@@ -39,14 +40,39 @@ class survey {
      *
      * @return string
      */
-    public static function get_block_student_view($instanceid, $userid) {
-        global $USER, $DB, $OUTPUT;
+    public static function get_block_html_for_student($instanceid, $userid) {
+        global $DB, $OUTPUT;
 
         // Check whether the survey is completed by this student.
         $completed = static::check_overall_completion($instanceid, $userid);
+        $studentsurveyurl = new moodle_url('/blocks/voice/studentsurvey.php', array(
+            'id' => $instanceid,
+        ));
 
         // Render the block.
-        return $OUTPUT->render_from_template('block_voice/student_view', [$completed => 'completed']);
+        return $OUTPUT->render_from_template('block_voice/student_view', array(
+            'completed' => $completed,
+            'studentsurveyurl' => $studentsurveyurl->out(),
+        ));
+    }
+
+    /**
+     * Render a block survey for a student.
+     */
+    public static function get_survey_html_for_student($instanceid, $userid) {
+        global $DB, $OUTPUT;
+
+        // Get block questions.
+        $config = setup::get_config_with_sections($instanceid);
+        echo "<pre>"; var_export($config); exit;
+
+        // Merge user responses.
+        static::load_user_survey_responses($config, $userid);
+
+        // Render the survey.
+        $OUTPUT->render_from_template('block_voice/survey', $config);
+
+
     }
 
     /**
@@ -104,6 +130,28 @@ class survey {
         }
 
         return true;
+    }
+
+    /**
+     * Get survey questions with existing user responses.
+     *
+     * @return array
+     */
+    public static function load_user_survey_responses($config, $userid) {
+        global $DB;
+
+        // Look for questions that have not had a response.
+        foreach ($config->sections as &$section){
+            foreach ($section->questions as &$question) {
+                $response = $DB->get_record('block_voice_questionresponse', array('questionid' => $question->id, 'userid' => $userid));
+                if (!empty($response)) {
+                    $question->responseid = $response->id;
+                    $question->responsevalue = $response->responsevalue;
+                }
+            }
+        }
+
+        return $config;
     }
     
 }

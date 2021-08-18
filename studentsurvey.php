@@ -18,7 +18,7 @@
  * Student Voice page for student surveys
  *
  * @package    block_voice
- * @copyright  2021 Michael de Raadt
+ * @copyright  2021 Michael Vangelovski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,30 +26,34 @@
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot.'/blocks/voice/lib.php');
 
-// Check user is logged in and capable of accessing the survey.
+use \block_voice\controllers\setup;
+use \block_voice\controllers\survey;
+
+$instanceid = optional_param('id', 0, PARAM_INT);
+
 require_login();
 
-/*
-// Determine course and context.
-$courseid = 1;
-$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+// Page setup.
 $context = context_system::instance();
-$action = optional_param('action', '', PARAM_ALPHANUMEXT); // Which page to show.
-$buttonattributes = array('class' => 'btn btn-primary', 'style' => 'margin: 0 0 10px 5px;');
-
-// Set up page parameters.
-$PAGE->set_course($course);
-$PAGE->requires->css('/blocks/voice/styles.css');
-$PAGE->set_url('/blocks/voice/surveyconfig.php');
 $PAGE->set_context($context);
-$title = get_string('voicesurveyconfig', 'block_voice');
+$studentsurveyurl = new moodle_url('/blocks/voice/studentsurvey.php', array(
+    'id' => $instanceid,
+));
+$PAGE->set_url($studentsurveyurl);
+$blockinstance = setup::get_block_instance($instanceid);
+$title = $blockinstance->config->title;
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
-$PAGE->set_pagelayout('report');
 
-// Start page output.
-echo $OUTPUT->header();
-echo $OUTPUT->container_start('survey_config');
-*/
-// TODO: Show the survey to students and capture results.
+// Add css.
+$PAGE->requires->css(new moodle_url($CFG->wwwroot . '/blocks/voice/voice.css', array('nocache' => rand())));
+
+$output = $OUTPUT->header();
+$output .= survey::get_survey_html_for_student($instanceid, $USER->id);
+
+// Add scripts.
+$PAGE->requires->js_call_amd('block_voice/survey', 'init');
+
+$output .= $OUTPUT->footer();
+echo $output;
 

@@ -56,6 +56,46 @@ class setup {
     }
 
     /**
+     * Get's the survey config, including sections and questions.
+     *
+     * @param  int  $surveyid
+     * @return array
+     */
+    public static function get_config_with_sections($instanceid) {
+        global $DB, $OUTPUT;
+
+        // Get selected questions for the block instance and mark the questions as checked.
+        $blockinstance = static::get_block_instance($instanceid);
+        $config = $blockinstance->config;
+        $selected = explode(',', $config->questionscsv);
+
+        // Get sections.
+        $sections = static::block_voice_get_sections($config->survey);
+
+        // Load questions for sections.
+        foreach ($sections as $i => &$section) {
+            $questions = static::block_voice_get_questions_by_section($section->id);
+            if ($selected) {
+                foreach ($questions as $j => &$question) {
+                    if (in_array($question->id, $selected) || $question->mandatory) {
+                        // Question needs to be included
+                    } else {
+                        unset($questions[$j]);
+                    }
+                }
+            }
+            if (empty($questions)) {
+                unset($sections[$i]);
+            } else {
+                $section->questions = $questions;
+            }
+        }
+        $config->sections = $sections;
+        return $config;
+    }
+
+
+    /**
      * Get's the edit_form questions html for a survey.
      *
      * @param  int  $surveyid
