@@ -33,10 +33,10 @@ require_once($CFG->libdir.'/externallib.php');
 use external_api;
 use external_function_parameters;
 use external_value;
-use \block_voice\controllers\editform;
+use \block_voice\controllers\setup;
 
 /**
- * Provides an external API for the editform.
+ * Provides an external API for the setup.
  *
  * @copyright 2021 Michael Vangelovski
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -72,7 +72,7 @@ class editform_api extends external_api {
 
         if ($action == 'get_questions') {
             $data = json_decode($data);
-            return editform::get_survey_questions_html($data->instanceid, $data->surveyid);
+            return setup::get_survey_questions_html($data->instanceid, $data->surveyid);
         }
 
         return 0;

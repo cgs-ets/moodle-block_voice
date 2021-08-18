@@ -97,7 +97,7 @@
                     data: JSON.stringify(data),
                 },
                 done: function(html) {
-                    self.rootel.find('questions').html(html);
+                    self.rootel.find('#questions').html(html);
                 },
                 fail: function(reason) {
                     Log.debug(reason);

@@ -27,6 +27,8 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot.'/blocks/voice/lib.php');
 
+use \block_voice\controllers\survey;
+
 /**
  * Student Voice block class
  *
@@ -124,7 +126,6 @@ class block_voice extends block_base {
             // TODO: Link to page showing student completions.
 
         } else {
-
             // Student view.
             $show = false;
             if ($this->config->group == 'all') {
@@ -140,8 +141,10 @@ class block_voice extends block_base {
                 $show = in_array($USER->id, array_keys($members));
             }
             if ($show) {
-                $this->content->text .= 'Student view';
-                // TODO: Show completed indicator or button to survey.
+                // Show completed indicator or button to survey.
+
+                $this->content->text .= survey::get_block_student_view($this->instance->id, $USER->id);
+
             }
         }
 

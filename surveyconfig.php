@@ -39,14 +39,13 @@ require_login();
 require_capability('block/voice:administer', $context);
 
 // Determine course and context.
-$courseid = 1;
-$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+//$courseid = 1;
+//$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
 $action = optional_param('action', '', PARAM_ALPHANUMEXT); // Which page to show.
-$buttonattributes = array('class' => 'btn btn-primary', 'style' => 'margin: 0 0 10px 5px;');
 
 // Set up page parameters.
 $surveyconfigurl = new moodle_url('/blocks/voice/surveyconfig.php', array());
-$PAGE->set_course($course);
+//$PAGE->set_course($course);
 $PAGE->set_url($surveyconfigurl);
 $PAGE->set_context($context);
 $title = get_string('voicesurveyconfig', 'block_voice');

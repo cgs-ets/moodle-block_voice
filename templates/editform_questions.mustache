@@ -23,45 +23,28 @@
 
     Template for the questions config page.
 }}
+<div class="form-group row fitem">
+        <div class="col-md-3"></div>
+        <div class="col-md-9">
+
 {{#sections}}
-    <fieldset class="clearfix collapsible" id="id_sectionheader-{{id}}">
-        <legend class="ftoggler"><a href="#" class="fheader" role="button" aria-controls="id_sectionheader-{{id}}" aria-expanded="true">{{name}}</a></legend>
-        <div class="fcontainer clearfix">
-            {{#questions}}
-                <div class="form-group row fitem">
-                    <div class="col-md-3"></div>
-                    <div class="col-md-9 checkbox">
-                        <div class="form-check">
-                            <label>
-                                <input type="checkbox" name="question_{{id}}" class="form-check-input question" value="{{id}}" id="id_question_{{id}}" {{#checked}}checked="checked"{{/checked}} {{#mandatory}}disabled="true"{{/mandatory}}>
-                                {{name}}
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            {{/questions}}
-            {{^questions.0}}
-                <div class="form-group row fitem">
-                    <div class="col-md-3"></div>
-                    <div class="col-md-9">
-                        <p>No questions have been configured for this section.</p>
-                    </div>
-                </div>
-            {{/questions.0}}
-        </div>
+    <div class="section">
+        <h5 class="header">{{name}}</h5>
+        {{#questions}}
+            <div class="form-check">
+                <label>
+                    <input type="checkbox" name="question_{{id}}" class="form-check-input question" value="{{id}}" id="id_question_{{id}}" {{#checked}}checked="checked"{{/checked}} {{#mandatory}}disabled="true"{{/mandatory}}>
+                    {{name}}
+                </label>
+            </div>
+        {{/questions}}
+        {{^questions.0}}
+            <p>No questions have been configured for this section.</p>
+        {{/questions.0}}
     </fieldset>
 {{/sections}}
 {{^sections.0}}
-    <fieldset class="clearfix collapsible" id="id_sectionsheader">
-        <legend class="ftoggler"><a href="#" class="fheader" role="button" aria-controls="id_sectionsheader" aria-expanded="true">Sections</a></legend>
-        <div class="fcontainer clearfix">
-            <div class="form-group row fitem">
-                <div class="col-md-3"></div>
-                <div class="col-md-9">
-                    <p>No questions have been configured for this survey.</p>
-                </div>
-            </div>
-        
-        </div>
-    </fieldset>
+    <p>No questions have been configured for this survey.</p>
 {{/sections.0}}
+</div>
+</div>

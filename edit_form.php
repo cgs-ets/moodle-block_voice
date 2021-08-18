@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot.'/blocks/voice/lib.php');
 
-use \block_voice\controllers\editform;
+use \block_voice\controllers\setup;
 
 /**
  * Student Voice block config form class
@@ -94,7 +94,7 @@ class block_voice_edit_form extends block_edit_form {
         $mform->addElement('select', 'config_group', get_string('group', 'block_voice'), $groupstodisplay);
 
         // Choose survey.
-        $surveys = block_voice_get_surveys();
+        $surveys = setup::block_voice_get_surveys();
         $selectablesurveys = array();
         foreach ($surveys as $survey) {
             $selectablesurveys[$survey->id] = $survey->name;
@@ -102,7 +102,8 @@ class block_voice_edit_form extends block_edit_form {
         $mform->addElement('select', 'config_survey', get_string('survey', 'block_voice'), $selectablesurveys);
 
         // Survey sections/questions. Loaded via ajax.
-        $mform->addElement('html', '<questions></questions>');
+        $mform->addElement('header', 'questionsheader', 'Questions');
+        $mform->addElement('html', '<div id="questions"></div>');
         $mform->addElement('hidden', 'config_questionscsv');
         $mform->setType('config_questionscsv', PARAM_TEXT);
 
