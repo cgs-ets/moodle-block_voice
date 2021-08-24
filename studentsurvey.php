@@ -29,30 +29,40 @@ require_once($CFG->dirroot.'/blocks/voice/lib.php');
 use \block_voice\controllers\setup;
 use \block_voice\controllers\survey;
 
-$instanceid = optional_param('id', 0, PARAM_INT);
+$courseid = required_param('course', PARAM_INT);
+$instanceid = required_param('id', PARAM_INT);
 
 require_login();
 
-// Page setup.
-$context = context_system::instance();
+// Setup page and context.
+$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+$context = context_course::instance($courseid);
 $PAGE->set_context($context);
+
 $studentsurveyurl = new moodle_url('/blocks/voice/studentsurvey.php', array(
+    'course' => $courseid,
     'id' => $instanceid,
 ));
 $PAGE->set_url($studentsurveyurl);
+
 $blockinstance = setup::get_block_instance($instanceid);
 $title = $blockinstance->config->title;
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
+$PAGE->navbar->add($course->shortname, new moodle_url('/course/view.php', array('id' => $courseid)));
+$PAGE->navbar->add($title, null);
+
 
 // Add css.
-$PAGE->requires->css(new moodle_url($CFG->wwwroot . '/blocks/voice/voice.css', array('nocache' => rand())));
+$PAGE->requires->css(new moodle_url($CFG->wwwroot . '/blocks/voice/survey.css', array('nocache' => rand())));
 
 $output = $OUTPUT->header();
-$output .= survey::get_survey_html_for_student($instanceid, $USER->id);
+$output .= survey::get_survey_html_for_student($courseid, $instanceid, $USER->id);
 
 // Add scripts.
-$PAGE->requires->js_call_amd('block_voice/survey', 'init');
+$PAGE->requires->js_call_amd('block_voice/survey', 'init', [
+    'instanceid' => $instanceid,
+]);
 
 $output .= $OUTPUT->footer();
 echo $output;

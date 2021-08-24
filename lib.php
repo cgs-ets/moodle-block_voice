@@ -28,3 +28,59 @@ require_once($CFG->libdir.'/formslib.php');
 // Global defaults.
 const SURVEY_FORMAT_LIKERT = 0;
 const SURVEY_FORMAT_THUMBS = 1;
+
+const LIKERT_ANSWERS = array(
+    '1' => array(
+        'value' => '1',
+        'name' => 'Strongly disagree',
+    ),
+    '2' => array(
+        'value' => '2',
+        'name' => 'Disagree',
+    ),
+    '3' => array(
+        'value' => '3',
+        'name' => 'Neutral',
+    ),
+    '4' => array(
+        'value' => '4',
+        'name' => 'Agree',
+    ),
+    '5' => array(
+        'value' => '5',
+        'name' => 'Strongly agree',
+    ),
+);
+
+const THUMBS_ANSWERS = array(
+    '1' => array(
+        'value' => '1',
+        'name' => '<i class="fa fa-thumbs-down" aria-hidden="true"></i>',
+    ),
+    '2' => array(
+        'value' => '2',
+        'name' => '<i class="fa fa-thumbs-up" aria-hidden="true"></i>',
+    ),
+);
+
+/**
+ * Helper function to add extra display info for user.
+ *
+ * @param stdClass $user
+ * @return stdClass $user
+ */
+function block_voice_load_user_display_info(&$user) {
+    global $PAGE;
+
+    // Fullname.
+    $user->fullname = fullname($user);
+
+    // Profile photo.
+    $userphoto = new \user_picture($user);
+    $userphoto->size = 2; // Size f2.
+    $user->profilephoto = $userphoto->get_url($PAGE)->out(false);
+
+    // Profile url.
+    $user->profileurl = new \moodle_url('/user/profile.php', array('id' => 2));
+    $user->profileurl = $user->profileurl->out(false);
+}

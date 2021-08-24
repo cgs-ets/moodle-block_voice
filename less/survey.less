@@ -1,0 +1,206 @@
+#page-blocks-voice-studentsurvey {
+    #region-main {
+        padding: 0;
+    }
+    #page-content {
+        font-size: 16px;
+        color: #000;
+    }
+    .survey {
+        .max-1000 {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            margin-top: -1px;
+            background-color: #cce5ff;
+            padding: 20px;
+            overflow: hidden;
+            .teacher {
+                width: auto;
+                margin: 0;
+                font-size: 21px;
+                overflow: hidden;
+                float: left;
+                padding-right: 50px;
+                .userpicture {
+                    height: 50px;
+                    width: auto;
+                }
+            }
+            .intro {
+                float: left;
+                margin-top: 10px;
+            }
+        }
+        .questions {
+            transition: all ease 0.2s;
+            border-top: 1px solid rgba(0, 0, 0, 0.25);
+        }
+        .questions.loading {
+            pointer-events: none;
+            opacity: 0.2;
+        }
+        .question {
+            border-bottom: 1px solid rgba(0,0,0,.125);
+            position: relative;
+            padding: 20px;
+            transition: all ease 0.2s;
+            .status {
+                position: absolute;
+                right: 7px;
+                top: 7px;
+                color: #ddd;
+                .unsaved, .saving, .saved {
+                    display: none;
+                }
+                .saved {
+                    color: green;
+                }
+            }
+            &[data-status="saving"] {
+                .likert {
+                    li {
+                        label {
+                            pointer-events: none;
+                            &:hover {
+                                color: #000;
+                            }
+                        }
+                    }
+                }
+                .status {
+                    .unsaved, .saved {
+                        display: none;
+                    }
+                    .saving {
+                        display: block;
+                        color: #ccc;
+                    }
+                }
+            }
+            &[data-status="saved"] {
+                background-color: #e9f5ec;
+                .likert {
+                    &:before {
+                        background-color: #bbb;
+                    }
+                }
+                .status {
+                    .unsaved, .saving {
+                        display: none;
+                    }
+                    .saved {
+                        display: block;
+                    }
+                }
+            }
+            &[data-status="unsaved"] {
+                .status {
+                    .saving, .saved {
+                        display: none;
+                    }
+                    .unsaved {
+                        display: block;
+                    }
+                }
+            }
+        }
+        .questiontext {
+            display: block;
+            font-size: 16px;
+            padding: 53px 0 0 4.25%;
+            margin-bottom: 20px;
+        }
+        .likert {
+            list-style: none;
+            width: 100%;
+            margin: 0;
+            padding: 0 0 53px;
+            display: block;
+            &:before {
+                content: "";
+                position: relative;
+                top: 9px;
+                left: 9.5%;
+                display: block;
+                background-color: #efefef;
+                height: 4px;
+                width: 78%;
+            }
+            li {
+                display: inline-block;
+                width: 19%;
+                text-align: center;
+                vertical-align: top;
+                label {
+                    width: 100%;
+                    cursor: pointer;
+                    &:hover, &[data-status="selected"], &[data-status="saving"] {
+                        color: #005CC8;
+                    }
+                    &[data-status="selected"] {
+                        font-weight: 600;
+                    }
+                }
+                input[type=radio] {
+                    display: block;
+                    position: relative;
+                    top: 0;
+                    left: 50%;
+                    margin-left: -6px;
+                    cursor: pointer;
+                }
+            }
+        }
+        .thumbs {
+            list-style: none;
+            width: 100%;
+            margin: 0;
+            padding: 0 0 53px;
+            display: block;
+            li {
+                display: inline-block;
+                width: 49%;
+                text-align: center;
+                vertical-align: top;
+                label {
+                    width: 100%;
+                    cursor: pointer;
+                    background-color: #ccc;
+                    padding-bottom: 13px;
+                    &:hover {
+                        color: #005CC8;
+                        background-color: #bfbfbf;
+                    }
+                    &[data-status="saving"] {
+                        color: #005CC8;
+                        background-color: #bbb;
+                    }
+                    &[data-status="selected"] {
+                        background-color: #005CC8;
+                        color: #fff;
+                    }
+                }
+                input[type=radio] {
+                    display: block;
+                    position: relative;
+                    top: 0;
+                    left: 50%;
+                    margin-left: -6px;
+                    cursor: pointer;
+                    opacity: 0;
+                }
+            }
+        }
+        &.format-thumbs {
+            .questiontext {
+                padding-left: 0;
+            }
+        }
+        .buttons {
+            padding: 20px 20px;
+            text-align: center;
+        }
+    }
+}

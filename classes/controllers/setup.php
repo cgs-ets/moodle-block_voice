@@ -61,7 +61,7 @@ class setup {
      * @param  int  $surveyid
      * @return array
      */
-    public static function get_config_with_sections($instanceid) {
+    public static function get_survey_config($instanceid) {
         global $DB, $OUTPUT;
 
         // Get selected questions for the block instance and mark the questions as checked.
@@ -69,30 +69,51 @@ class setup {
         $config = $blockinstance->config;
         $selected = explode(',', $config->questionscsv);
 
+        // Get survey.
+        $survey = static::get_survey($config->survey);
+
         // Get sections.
-        $sections = static::block_voice_get_sections($config->survey);
+        $sections = static::get_sections($config->survey);
 
         // Load questions for sections.
         foreach ($sections as $i => &$section) {
-            $questions = static::block_voice_get_questions_by_section($section->id);
-            if ($selected) {
-                foreach ($questions as $j => &$question) {
-                    if (in_array($question->id, $selected) || $question->mandatory) {
-                        // Question needs to be included
-                    } else {
-                        unset($questions[$j]);
-                    }
-                }
-            }
+            $questions = static::get_questions_by_section($section->id, $selected);
             if (empty($questions)) {
                 unset($sections[$i]);
             } else {
                 $section->questions = $questions;
             }
         }
-        $config->sections = $sections;
+        $survey->sections = $sections;
+        $config->survey = $survey;
         return $config;
     }
+
+
+    /**
+     * Get's the survey config without sections.
+     *
+     * @param  int  $instanceid. Block instance id.
+     * @return array
+     */
+    public static function get_survey_config_flat($instanceid) {
+        global $DB, $OUTPUT;
+
+        // Get selected questions for the block instance and mark the questions as checked.
+        $blockinstance = static::get_block_instance($instanceid);
+        $config = $blockinstance->config;
+        $selected = explode(',', $config->questionscsv);
+
+        // Get survey.
+        $survey = static::get_survey($config->survey);
+
+        // Get questions.
+        $survey->questions = static::get_questions_by_survey($survey->id, $selected);
+        $config->survey = $survey;
+        return $config;
+    }
+
+
 
 
     /**
@@ -110,11 +131,11 @@ class setup {
         $selected = explode(',', $blockinstance->config->questionscsv);
 
         // Get sections.
-        $sections = static::block_voice_get_sections($surveyid);
+        $sections = static::get_sections($surveyid);
 
         // Load questions for sections.
         foreach ($sections as &$section) {
-            $questions = static::block_voice_get_questions_by_section($section->id);
+            $questions = static::get_questions_by_section($section->id);
             if ($selected) {
                 foreach ($questions as &$question) {
                     $question->checked = false;
@@ -131,12 +152,26 @@ class setup {
     }
 
     /**
+     * Get a survey by id.
+     *
+     * @param bool hidden controls whether only visible surveys are returned
+     * @return array of surveys
+     */
+    public static function get_survey($id) {
+        global $DB;
+
+        $survey = $DB->get_record('block_voice_survey', array('id' => $id));
+
+        return $survey;
+    }
+
+    /**
      * Get all surveys.
      *
      * @param bool hidden controls whether only visible surveys are returned
      * @return array of surveys
      */
-    public static function block_voice_get_surveys($hidden = false) {
+    public static function get_surveys($hidden = false) {
         global $DB;
 
         $where = '';
@@ -155,7 +190,7 @@ class setup {
      * @param int surveyid ID for survey containing sections
      * @return array of sections
      */
-    public static function block_voice_get_sections($surveyid) {
+    public static function get_sections($surveyid) {
         global $DB;
 
         if (empty($surveyid)) {
@@ -182,7 +217,7 @@ class setup {
      * @param int surveyid ID for survey containing questions
      * @return array of questions
      */
-    public static function block_voice_get_questions_by_section($sectionid) {
+    public static function get_questions_by_section($sectionid, $selected = false) {
         global $DB;
 
         $sql = "SELECT *
@@ -195,6 +230,16 @@ class setup {
             return [];
         }
 
+        if ($selected) {
+            foreach ($questions as $j => &$question) {
+                if (in_array($question->id, $selected) || $question->mandatory) {
+                    // Question needs to be included
+                } else {
+                    unset($questions[$j]);
+                }
+            }
+        }
+
         return $questions;
     }
 
@@ -204,22 +249,32 @@ class setup {
      * @param int surveyid ID for survey containing questions
      * @return array of questions
      */
-    public static function block_voice_get_questions_by_survey($surveyid) {
+    public static function get_questions_by_survey($surveyid, $selected) {
         global $DB;
 
-        $sections = static::block_voice_get_sections($surveyid);
+        $sections = static::get_sections($surveyid);
         if (empty($sections)) {
             return [];
         }
 
         list($insql, $inparams) = $DB->get_in_or_equal(array_column($sections, 'id'));
         $sql = "SELECT *
-                FROM {block_voice_question}
-                WHERE sectionid $insql
-            ORDER BY seq ASC";
+                  FROM {block_voice_question}
+                 WHERE sectionid $insql
+              ORDER BY seq ASC";
         $questions = array_values($DB->get_records_sql($sql, $inparams));
         if (empty($questions)) {
             return [];
+        }
+
+        if ($selected) {
+            foreach ($questions as $j => &$question) {
+                if (in_array($question->id, $selected) || $question->mandatory) {
+                    // Question needs to be included
+                } else {
+                    unset($questions[$j]);
+                }
+            }
         }
 
         return $questions;

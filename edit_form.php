@@ -28,6 +28,7 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot.'/blocks/voice/lib.php');
 
 use \block_voice\controllers\setup;
+use \block_voice\controllers\survey;
 
 /**
  * Student Voice block config form class
@@ -45,7 +46,10 @@ class block_voice_edit_form extends block_edit_form {
             'instanceid' => $this->block->instance->id,
         ]);
 
-        // TODO: Lock form controls when at least one student has completed the survey.
+        // Show warning when at least one student has completed the survey.
+        if (survey::has_responses($this->block->instance->id)) {
+            \core\notification::error(get_string('surveyhasresponses', 'block_voice'));
+        }
 
         $sitecontext = CONTEXT::instance_by_id(CONTEXT_SYSTEM);
         if (has_capability('block/voice:administer', $sitecontext)) {
@@ -94,7 +98,7 @@ class block_voice_edit_form extends block_edit_form {
         $mform->addElement('select', 'config_group', get_string('group', 'block_voice'), $groupstodisplay);
 
         // Choose survey.
-        $surveys = setup::block_voice_get_surveys();
+        $surveys = setup::get_surveys();
         $selectablesurveys = array();
         foreach ($surveys as $survey) {
             $selectablesurveys[$survey->id] = $survey->name;
@@ -117,14 +121,20 @@ class block_voice_edit_form extends block_edit_form {
      * @return object submitted data.
      */
     public function get_data() {
+        global $COURSE;
         $data = parent::get_data();
 
         if (empty($data)) {
             return $data;
         }
 
-        // Do something with the submitted form data.
-        //echo "<pre>"; var_export($data); exit;
+        // Prevent saving when at least one student has completed the survey.
+        if (survey::has_responses($this->block->instance->id)) {
+            \core\notification::error(get_string('surveyhasresponses', 'block_voice'));
+            $courseurl = new moodle_url('/course/view.php', array('id' => $COURSE->id));
+            redirect($courseurl->out(false));
+            exit;
+        }
 
         return $data;
     }

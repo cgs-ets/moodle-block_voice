@@ -70,3 +70,4 @@ $string['voice:myaddinstance'] = 'Add Student Voice block instance to the Dashbo
 $string['voicesurveyconfig'] = 'Student Voice Surveys';
 $string['setupfirst'] = 'Configure this block to select questions.';
 $string['survey'] = 'Survey';
+$string['surveyhasresponses'] = 'Survey already has responses. Changes to configuration are not permitted.';

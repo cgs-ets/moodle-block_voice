@@ -104,7 +104,7 @@ class block_voice extends block_base {
      * @return string
      */
     public function get_content() {
-        global $USER, $COURSE, $CFG, $OUTPUT, $DB;
+        global $USER, $COURSE, $CFG, $OUTPUT, $DB, $PAGE;
 
         // If content has already been generated, don't waste time generating it again.
         if ($this->content !== null) {
@@ -118,13 +118,26 @@ class block_voice extends block_base {
             $this->content->text = get_string('setupfirst', 'block_voice');
             return $this->content;
         }
+    
+        // Add css.
+        $PAGE->requires->css(new moodle_url($CFG->wwwroot . '/blocks/voice/voice.css', array('nocache' => rand())));
 
         // Teacher view.
         if (has_capability('block/voice:addinstance', $this->context)) {
-            $this->content->text = 'Staff view';
-            // TODO: Show progress bar of survey completions.
-            // TODO: Link to page showing student completions.
-
+            // Check if configured yet.
+            if (!isset($this->config->teacher)) {
+                $this->content->text .= 'Configure to set questions.';
+                return $this->content;
+            }
+            // If survey teacher, show stats.
+            if ($this->config->teacher == $USER->id) {
+                // TODO: Show progress bar of survey completions.
+                // TODO: Link to page showing student completions.
+                $this->content->text .= survey::get_block_html_for_teacher($COURSE->id, $this->instance->id, $USER->id);
+            } else {
+                // If another teacher dont show block, except when editing.
+                return null;
+            }
         } else {
             // Student view.
             $show = false;
@@ -141,10 +154,7 @@ class block_voice extends block_base {
                 $show = in_array($USER->id, array_keys($members));
             }
             if ($show) {
-                // Show completed indicator or button to survey.
-
-                $this->content->text .= survey::get_block_html_for_student($this->instance->id, $USER->id);
-
+                $this->content->text .= survey::get_block_html_for_student($COURSE->id, $this->instance->id, $USER->id);
             }
         }
 
