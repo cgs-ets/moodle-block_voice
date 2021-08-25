@@ -181,13 +181,31 @@ class survey {
 
         // Look for questions that have not had a response.
         foreach ($questions as $questionid) {
-            $response = $DB->get_record('block_voice_questionresponse', array('questionid' => $questionid, 'userid' => $userid));
+            $response = static::get_response($instanceid, $questionid, $userid);
             if (empty($response)) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * Get a single response.
+     *
+     * @return array
+     */
+    public static function get_response($instanceid, $questionid, $userid) {
+        global $DB;
+
+        $sql = "SELECT *
+                  FROM {block_voice_questionresponse} q 
+            INNER JOIN {block_voice_surveyresponse} s
+                    ON q.surveyresponseid = s.id
+                 WHERE s.blockinstanceid = ?
+                   AND q.questionid = ?
+                   AND q.userid = ?";
+        return $DB->get_record_sql($sql, array($instanceid, $questionid, $userid));
     }
 
     /**
@@ -204,7 +222,7 @@ class survey {
         // Get responses.
         $responses = array();
         foreach ($questions as $questionid) {
-            $response = $DB->get_record('block_voice_questionresponse', array('questionid' => $questionid, 'userid' => $userid));
+            $response = static::get_response($instanceid, $questionid, $userid);
             if($response) {
                 $responses[] = $response;
             }
