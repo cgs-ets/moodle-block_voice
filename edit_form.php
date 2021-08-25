@@ -121,7 +121,8 @@ class block_voice_edit_form extends block_edit_form {
      * @return object submitted data.
      */
     public function get_data() {
-        global $COURSE;
+        global $COURSE, $DB;
+
         $data = parent::get_data();
 
         if (empty($data)) {
@@ -134,6 +135,27 @@ class block_voice_edit_form extends block_edit_form {
             $courseurl = new moodle_url('/course/view.php', array('id' => $COURSE->id));
             redirect($courseurl->out(false));
             exit;
+        }
+
+        // Save the config to the teachersurvey and surveyquestions tables. These are convenience tables for reporting.
+        $DB->delete_records('block_voice_teachersurvey', array('blockinstanceid' => $this->block->instance->id));
+        $teachersurvey = new \stdClass();
+        $teachersurvey->blockinstanceid = $this->block->instance->id;
+        $teachersurvey->title = $data->config_title;
+        $teachersurvey->open = $data->config_open;
+        $teachersurvey->group = $data->config_group;
+        $teachersurvey->surveyid = $data->config_survey;
+        $teachersurvey->userid = $data->config_teacher;
+        $teachersurvey->id = $DB->insert_record('block_voice_teachersurvey', $teachersurvey);
+        if ($teachersurvey->id) {
+            $DB->delete_records('block_voice_teachersurvey', array('teachersurveyid' => $teachersurvey->id));
+            $questions = explode(',', $data->config_questionscsv);
+            foreach($questions as $questionid) {
+                $surveyquestion = new \stdClass();
+                $surveyquestion->teachersurveyid = $teachersurvey->id ;
+                $surveyquestion->questionid = $questionid;
+                $DB->insert_record('block_voice_surveyquestions', $surveyquestion);
+            }
         }
 
         return $data;
