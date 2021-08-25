@@ -132,6 +132,7 @@ class survey {
         $data = array(
             'config' => $blockinstance->config,
             'students' => $students,
+            'courseid' => $courseid,
         );
 
         $data = static::export_for_studentcompletions($data);
@@ -396,6 +397,7 @@ class survey {
         foreach($data['students'] as &$student) {
             block_voice_load_user_display_info($student);
         }
+        $data['courseurl'] = new moodle_url('/course/view.php', array('id' => $data['courseid']));
         return $data;
     }
     
