@@ -54,7 +54,7 @@ $PAGE->navbar->add($title, null);
 
 
 // Add css.
-$PAGE->requires->css(new moodle_url($CFG->wwwroot . '/blocks/voice/survey.css', array('nocache' => rand())));
+$PAGE->requires->css(new moodle_url($CFG->wwwroot . '/blocks/voice/voice.css', array('nocache' => rand())));
 
 $output = $OUTPUT->header();
 $output .= survey::get_survey_html_for_student($courseid, $instanceid, $USER->id);

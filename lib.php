@@ -74,6 +74,7 @@ function block_voice_load_user_display_info(&$user) {
 
     // Fullname.
     $user->fullname = fullname($user);
+    $user->lastnamefirst = $user->lastname . ", " . $user->firstname;
 
     // Profile photo.
     $userphoto = new \user_picture($user);

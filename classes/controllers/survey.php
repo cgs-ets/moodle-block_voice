@@ -83,12 +83,14 @@ class survey {
         list($numstudents, $numcompleted, $numinprogress, $numnotstarted) = static::get_teacher_survey_stats($courseid, $instanceid);
         $percentcompleted = ($numcompleted / $numstudents) * 100;
         $percentinprogress = ($numinprogress / $numstudents) * 100;
+        $percentnotstarted = ($numnotstarted / $numstudents) * 100;
 
         // Render the block.
         return $OUTPUT->render_from_template('block_voice/teacher_view', array(
             'studentcompletionsurl' => $studentcompletionsurl->out(false),
             'percentcompleted' => $percentcompleted,
             'percentinprogress' => $percentinprogress,
+            'percentnotstarted' => $percentnotstarted,
             'numstudents' => $numstudents,
             'numcompleted' => $numcompleted,
             'numinprogress' => $numinprogress,
@@ -106,15 +108,40 @@ class survey {
         $config = setup::get_survey_config_flat($instanceid);
         
         // Export for template.
-        $related = array(
+        $data = array(
             'userid' => $userid,
             'courseid' => $courseid,
+            'config' => $config,
         );
-        $config = static::export($config, $related, true, true);
+        $config = static::export_for_survey($data, true, true);
 
         // Render the survey.
         return $OUTPUT->render_from_template('block_voice/survey', $config);
     }
+
+    /**
+     * Render student completions.
+     */
+    public static function get_student_completions_html($courseid, $instanceid) {
+        global $OUTPUT;
+
+        $blockinstance = setup::get_block_instance($instanceid);
+        $students = static::get_student_completion_data($courseid, $instanceid);
+
+        // Export for template.
+        $data = array(
+            'config' => $blockinstance->config,
+            'students' => $students,
+        );
+
+        $data = static::export_for_studentcompletions($data);
+        //echo "<pre>"; var_export($data); exit;
+
+        // Render the survey.
+        return $OUTPUT->render_from_template('block_voice/student_completions', $data);
+    }
+
+
 
     public static function get_survey_teacher($instanceid) {
         $config = setup::get_survey_config_flat($instanceid);
@@ -213,9 +240,11 @@ class survey {
         $numinprogress = 0;
         $numnotstarted = 0;
         foreach ($users as $user) {
-            $roles = get_user_roles($context, $user->id, false);
-            $roles = array_column($roles, 'roleid');
-            if (in_array(5, $roles)) { // 5 = student.
+            //$roles = get_user_roles($context, $user->id, false);
+            //$roles = array_column($roles, 'roleid');
+            //if (in_array(5, $roles) && !in_array(4, $roles)) { // 5 = student. 4 = teacher
+            // Switch is based on cap, not role.
+            if ( ! has_capability('block/voice:addinstance', $context, $user)) {
                 $numstudents++;
                 // Check whether completed, inprogress, or not started.
                 list($questionsnum, $answerednum) = static::get_student_survey_stats($instanceid, $user->id);
@@ -235,6 +264,47 @@ class survey {
         }
 
         return array($numstudents, $numcompleted, $numinprogress, $numnotstarted);
+    }
+
+    /**
+     * Student completions.
+     *
+     * @return array
+     */
+    public static function get_student_completion_data($courseid, $instanceid) {
+        global $DB;
+
+        $context = \context_course::instance($courseid);
+        $config = setup::get_survey_config_flat($instanceid);
+
+        // Get survey students.
+        $users = array();
+        if ($config->group == 'all') {
+            $users = get_enrolled_users($context);
+        } else if (substr($config->group, 0, 9) == 'grouping-') {
+            $grouping = (int) substr($config->group, 9);
+            $users = groups_get_grouping_members($grouping);
+        } else if (substr($config->group, 0, 6) == 'group-') {
+            $group = (int) substr($config->group, 6);
+            $users = groups_get_members($group);
+        }
+
+        $students = array();
+        foreach ($users as $user) {
+            if ( ! has_capability('block/voice:addinstance', $context, $user)) {
+                // Check whether completed, inprogress, or not started.
+                list($questionsnum, $answerednum) = static::get_student_survey_stats($instanceid, $user->id);
+                $user->completed = $answerednum == $questionsnum;
+                $user->notstarted = $answerednum == 0;
+                $user->inprogress = ($answerednum > 0 && !$user->completed);
+                $students[] = $user;
+            }
+        }
+
+        usort($students, function($a, $b) {return strcmp($a->lastname, $b->lastname);});
+
+
+        return $students;
     }
 
     /**
@@ -272,32 +342,32 @@ class survey {
      *
      * @return array
      */
-    public static function export($config, $related, $loadresponses = false, $randomise = false) {
+    public static function export_for_survey($data, $loadresponses = false, $randomise = false) {
         global $DB;
         
-        $config->survey->islikert = ($config->survey->format == SURVEY_FORMAT_LIKERT);
-        $config->survey->isthumbs = ($config->survey->format == SURVEY_FORMAT_THUMBS);
-        $config->survey->formatname = ($config->survey->format == SURVEY_FORMAT_THUMBS) ? 'thumbs' : 'likert';
-        $config->courseurl = new moodle_url('/course/view.php', array('id' => $related['courseid']));
+        $data['config']->survey->islikert = ($data['config']->survey->format == SURVEY_FORMAT_LIKERT);
+        $data['config']->survey->isthumbs = ($data['config']->survey->format == SURVEY_FORMAT_THUMBS);
+        $data['config']->survey->formatname = ($data['config']->survey->format == SURVEY_FORMAT_THUMBS) ? 'thumbs' : 'likert';
+        $data['config']->courseurl = new moodle_url('/course/view.php', array('id' => $data['courseid']));
 
-        $config->teacher = \core_user::get_user($config->teacher);
-        block_voice_load_user_display_info($config->teacher);
+        $data['config']->teacher = \core_user::get_user($data['config']->teacher);
+        block_voice_load_user_display_info($data['config']->teacher);
 
         // Export questions.
-        if (isset($config->survey->questions)) {
-            foreach ($config->survey->questions as &$question) {
+        if (isset($data['config']->survey->questions)) {
+            foreach ($data['config']->survey->questions as &$question) {
                 // Add answers to questions.
                 $question->answers = array();
-                if ($config->survey->islikert) {
+                if ($data['config']->survey->islikert) {
                     $question->answers = LIKERT_ANSWERS;
                 }
-                if ($config->survey->isthumbs) {
+                if ($data['config']->survey->isthumbs) {
                     $question->answers = THUMBS_ANSWERS;
                 }
 
                 // Add responses to questions/answers.
                 if ($loadresponses) {
-                    $response = $DB->get_record('block_voice_questionresponse', array('questionid' => $question->id, 'userid' => $related['userid']));
+                    $response = $DB->get_record('block_voice_questionresponse', array('questionid' => $question->id, 'userid' => $data['userid']));
                     if (!empty($response)) {
                         $question->responseid = $response->id;
                         $question->responsevalue = $response->responsevalue;
@@ -314,12 +384,19 @@ class survey {
 
         // Randomise question order.
         if ($randomise) {
-            static::randomise_questions($config);
+            static::randomise_questions($data['config']);
         }
 
-        //echo "<pre>"; var_export($config); exit;
-        return $config;
+        return $data['config'];
+    }
 
+    public static function export_for_studentcompletions($data) {
+        $data['config']->teacher = \core_user::get_user($data['config']->teacher);
+        block_voice_load_user_display_info($data['config']->teacher);
+        foreach($data['students'] as &$student) {
+            block_voice_load_user_display_info($student);
+        }
+        return $data;
     }
     
     /**

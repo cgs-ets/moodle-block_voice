@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Student Voice page for student survey completions
+ * Student Voice page for student surveys
  *
  * @package    block_voice
- * @copyright  2021 Michael de Raadt
+ * @copyright  2021 Michael Vangelovski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,30 +26,48 @@
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot.'/blocks/voice/lib.php');
 
-// Check user is logged in and capable of accessing the survey.
+use \block_voice\controllers\setup;
+use \block_voice\controllers\survey;
+
+$courseid = required_param('course', PARAM_INT);
+$instanceid = required_param('id', PARAM_INT);
+
 require_login();
 
-/*
-// Determine course and context.
-$courseid = 1;
+// Setup page and context.
 $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-$context = context_system::instance();
-$action = optional_param('action', '', PARAM_ALPHANUMEXT); // Which page to show.
-$buttonattributes = array('class' => 'btn btn-primary', 'style' => 'margin: 0 0 10px 5px;');
-
-// Set up page parameters.
-$PAGE->set_course($course);
-$PAGE->requires->css('/blocks/voice/styles.css');
-$PAGE->set_url('/blocks/voice/surveyconfig.php');
+$context = context_course::instance($courseid);
 $PAGE->set_context($context);
-$title = get_string('voicesurveyconfig', 'block_voice');
+
+// Only staff.
+require_capability('block/voice:addinstance', $context);
+
+$studentcompletionsurl = new moodle_url('/blocks/voice/studentcompletions.php', array(
+    'course' => $courseid,
+    'id' => $instanceid,
+));
+$PAGE->set_url($studentcompletionsurl);
+
+$blockinstance = setup::get_block_instance($instanceid);
+$title = $blockinstance->config->title;
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
-$PAGE->set_pagelayout('report');
+$PAGE->navbar->add($course->shortname, new moodle_url('/course/view.php', array('id' => $courseid)));
+$PAGE->navbar->add($title, null);
 
-// Start page output.
-echo $OUTPUT->header();
-echo $OUTPUT->container_start('survey_config');
-*/
-// TODO: Add table showing students who have completed the survey.
+// Add css.
+$PAGE->requires->css(new moodle_url($CFG->wwwroot . '/blocks/voice/voice.css', array('nocache' => rand())));
+// Add listjs
+$PAGE->requires->js( new moodle_url($CFG->wwwroot . '/blocks/voice/js/listjs/1.5.0/list.min.js'), true );
+
+$output = $OUTPUT->header();
+$output .= survey::get_student_completions_html($courseid, $instanceid);
+
+// Add scripts.
+$PAGE->requires->js_call_amd('block_voice/studentcompletions', 'init', [
+    'instanceid' => $instanceid,
+]);
+
+$output .= $OUTPUT->footer();
+echo $output;
 

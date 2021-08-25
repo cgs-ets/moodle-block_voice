@@ -78,3 +78,244 @@
 .block.block_voice .wrapper.teacherview .progress .progress-bar.inprogress {
   background: orange;
 }
+.block.block_voice .wrapper.teacherview .progress .progress-bar.notstarted {
+  background: #e1e4e8;
+}
+#page-blocks-voice-studentsurvey #region-main {
+  padding: 0;
+}
+#page-blocks-voice-studentsurvey #page-content {
+  font-size: 16px;
+  color: #000;
+}
+#page-blocks-voice-studentsurvey .survey .max-1000 {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+#page-blocks-voice-studentsurvey .survey .header {
+  margin-top: -1px;
+  background-color: #cce5ff;
+  padding: 20px;
+  overflow: hidden;
+}
+#page-blocks-voice-studentsurvey .survey .header .teacher {
+  width: auto;
+  margin: 0;
+  font-size: 21px;
+  overflow: hidden;
+  float: left;
+  padding-right: 50px;
+}
+#page-blocks-voice-studentsurvey .survey .header .teacher .userpicture {
+  height: 50px;
+  width: auto;
+}
+#page-blocks-voice-studentsurvey .survey .header .intro {
+  float: left;
+  margin-top: 10px;
+}
+#page-blocks-voice-studentsurvey .survey .questions {
+  transition: all ease 0.2s;
+  border-top: 1px solid rgba(0, 0, 0, 0.25);
+}
+#page-blocks-voice-studentsurvey .survey .questions.loading {
+  pointer-events: none;
+  opacity: 0.2;
+}
+#page-blocks-voice-studentsurvey .survey .question {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  position: relative;
+  padding: 20px;
+  transition: all ease 0.2s;
+}
+#page-blocks-voice-studentsurvey .survey .question .status {
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  color: #ddd;
+}
+#page-blocks-voice-studentsurvey .survey .question .status .unsaved,
+#page-blocks-voice-studentsurvey .survey .question .status .saving,
+#page-blocks-voice-studentsurvey .survey .question .status .saved {
+  display: none;
+}
+#page-blocks-voice-studentsurvey .survey .question .status .saved {
+  color: green;
+}
+#page-blocks-voice-studentsurvey .survey .question[data-status="saving"] .likert li label {
+  pointer-events: none;
+}
+#page-blocks-voice-studentsurvey .survey .question[data-status="saving"] .likert li label:hover {
+  color: #000;
+}
+#page-blocks-voice-studentsurvey .survey .question[data-status="saving"] .status .unsaved,
+#page-blocks-voice-studentsurvey .survey .question[data-status="saving"] .status .saved {
+  display: none;
+}
+#page-blocks-voice-studentsurvey .survey .question[data-status="saving"] .status .saving {
+  display: block;
+  color: #ccc;
+}
+#page-blocks-voice-studentsurvey .survey .question[data-status="saved"] {
+  background-color: #e9f5ec;
+}
+#page-blocks-voice-studentsurvey .survey .question[data-status="saved"] .likert:before {
+  background-color: #bbb;
+}
+#page-blocks-voice-studentsurvey .survey .question[data-status="saved"] .status .unsaved,
+#page-blocks-voice-studentsurvey .survey .question[data-status="saved"] .status .saving {
+  display: none;
+}
+#page-blocks-voice-studentsurvey .survey .question[data-status="saved"] .status .saved {
+  display: block;
+}
+#page-blocks-voice-studentsurvey .survey .question[data-status="unsaved"] .status .saving,
+#page-blocks-voice-studentsurvey .survey .question[data-status="unsaved"] .status .saved {
+  display: none;
+}
+#page-blocks-voice-studentsurvey .survey .question[data-status="unsaved"] .status .unsaved {
+  display: block;
+}
+#page-blocks-voice-studentsurvey .survey .questiontext {
+  display: block;
+  font-size: 16px;
+  padding: 53px 0 0 4.25%;
+  margin-bottom: 20px;
+}
+#page-blocks-voice-studentsurvey .survey .likert {
+  list-style: none;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 53px;
+  display: block;
+}
+#page-blocks-voice-studentsurvey .survey .likert:before {
+  content: "";
+  position: relative;
+  top: 9px;
+  left: 9.5%;
+  display: block;
+  background-color: #efefef;
+  height: 4px;
+  width: 78%;
+}
+#page-blocks-voice-studentsurvey .survey .likert li {
+  display: inline-block;
+  width: 19%;
+  text-align: center;
+  vertical-align: top;
+}
+#page-blocks-voice-studentsurvey .survey .likert li label {
+  width: 100%;
+  cursor: pointer;
+}
+#page-blocks-voice-studentsurvey .survey .likert li label:hover,
+#page-blocks-voice-studentsurvey .survey .likert li label[data-status="selected"],
+#page-blocks-voice-studentsurvey .survey .likert li label[data-status="saving"] {
+  color: #005CC8;
+}
+#page-blocks-voice-studentsurvey .survey .likert li label[data-status="selected"] {
+  font-weight: 600;
+}
+#page-blocks-voice-studentsurvey .survey .likert li input[type=radio] {
+  display: block;
+  position: relative;
+  top: 0;
+  left: 50%;
+  margin-left: -6px;
+  cursor: pointer;
+}
+#page-blocks-voice-studentsurvey .survey .thumbs {
+  list-style: none;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 53px;
+  display: block;
+}
+#page-blocks-voice-studentsurvey .survey .thumbs li {
+  display: inline-block;
+  width: 49%;
+  text-align: center;
+  vertical-align: top;
+}
+#page-blocks-voice-studentsurvey .survey .thumbs li label {
+  width: 100%;
+  cursor: pointer;
+  background-color: #ccc;
+  padding-bottom: 13px;
+}
+#page-blocks-voice-studentsurvey .survey .thumbs li label:hover {
+  color: #005CC8;
+  background-color: #bfbfbf;
+}
+#page-blocks-voice-studentsurvey .survey .thumbs li label[data-status="saving"] {
+  color: #005CC8;
+  background-color: #bbb;
+}
+#page-blocks-voice-studentsurvey .survey .thumbs li label[data-status="selected"] {
+  background-color: #005CC8;
+  color: #fff;
+}
+#page-blocks-voice-studentsurvey .survey .thumbs li input[type=radio] {
+  display: block;
+  position: relative;
+  top: 0;
+  left: 50%;
+  margin-left: -6px;
+  cursor: pointer;
+  opacity: 0;
+}
+#page-blocks-voice-studentsurvey .survey.format-thumbs .questiontext {
+  padding-left: 0;
+}
+#page-blocks-voice-studentsurvey .survey .buttons {
+  padding: 20px 20px;
+  text-align: center;
+}
+#page-blocks-voice-studentcompletions #region-main {
+  padding: 0;
+}
+#page-blocks-voice-studentcompletions .studentcompletions .header {
+  margin-top: -1px;
+  background-color: #cce5ff;
+  padding: 20px;
+  overflow: hidden;
+}
+#page-blocks-voice-studentcompletions .studentcompletions .header .teacher {
+  width: auto;
+  margin: 0;
+  font-size: 21px;
+  overflow: hidden;
+  float: left;
+  padding-right: 50px;
+}
+#page-blocks-voice-studentcompletions .studentcompletions .header .teacher .userpicture {
+  height: 50px;
+  width: auto;
+}
+#page-blocks-voice-studentcompletions .studentcompletions .header .intro {
+  float: left;
+  margin-top: 10px;
+}
+#page-blocks-voice-studentcompletions .studentcompletions .students {
+  transition: all ease 0.2s;
+  border-top: 1px solid rgba(0, 0, 0, 0.25);
+}
+#page-blocks-voice-studentcompletions .studentcompletions .sort {
+  cursor: pointer;
+  color: #005b94;
+}
+#page-blocks-voice-studentcompletions .studentcompletions .th-photo {
+  width: 50px;
+}
+#page-blocks-voice-studentcompletions .studentcompletions .th-name {
+  width: 200px;
+}
+#page-blocks-voice-studentcompletions .studentcompletions .student img.userpicture {
+  height: 35px;
+  width: auto;
+}
+#page-blocks-voice-studentcompletions .studentcompletions .buttons {
+  padding: 20px 20px;
+  text-align: center;
+}

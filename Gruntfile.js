@@ -68,7 +68,6 @@
                 },
                 files: {
                     "voice.css": "less/voice.less",
-                    "survey.css": "less/survey.less",
                 }
             }
        },

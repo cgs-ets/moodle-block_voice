@@ -27,9 +27,10 @@
     <a href="{{studentcompletionsurl}}" class="progress-link">
         <span class="left-count">{{numcompleted}}</span>
         <div class="progress-wrap">
-            <div class="progress" data-toggle="tooltip" data-placement="bottom" title="{{numnotstarted}} not started">
+            <div class="progress">
                 <span class="progress-bar complete" style="width: {{percentcompleted}}%" data-toggle="tooltip" title="{{numcompleted}} completed"></span>
                 <span class="progress-bar inprogress" style="width: {{percentinprogress}}%" data-toggle="tooltip" title="{{numinprogress}} in progress"></span>
+                <span class="progress-bar notstarted" style="width: {{percentnotstarted}}%" data-toggle="tooltip" title="{{numnotstarted}} not started"></span>
             </div>
         </div>
         <span class="right-count">{{numstudents}}</span>
