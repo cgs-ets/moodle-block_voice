@@ -1,3 +1,7 @@
+.block.block_voice .wrapper {
+  display: block;
+  overflow: hidden;
+}
 .block.block_voice .wrapper.studentview {
   margin: 0 -17px -17px;
 }
