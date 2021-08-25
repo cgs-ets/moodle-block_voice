@@ -131,8 +131,7 @@ class block_voice extends block_base {
             }
             // If survey teacher, show stats.
             if ($this->config->teacher == $USER->id) {
-                // TODO: Show progress bar of survey completions.
-                // TODO: Link to page showing student completions.
+                // Show progress bar of survey completions and link to page showing student completions.
                 $this->content->text .= survey::get_block_html_for_teacher($COURSE->id, $this->instance->id, $USER->id);
             } else {
                 // If another teacher dont show block, except when editing.
