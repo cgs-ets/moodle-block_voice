@@ -55,14 +55,18 @@
 }
 .block.block_voice .wrapper.teacherview .left-count {
   position: absolute;
+  text-align: center;
+  min-width: 30px;
 }
 .block.block_voice .wrapper.teacherview .right-count {
   position: absolute;
   top: 0;
   right: 0;
+  text-align: center;
+  min-width: 30px;
 }
 .block.block_voice .wrapper.teacherview .progress-wrap {
-  padding: 7px 17px;
+  padding: 7px 30px;
 }
 .block.block_voice .wrapper.teacherview .progress {
   width: 100%;
