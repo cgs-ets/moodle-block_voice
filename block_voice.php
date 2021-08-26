@@ -135,7 +135,12 @@ class block_voice extends block_base {
                 $this->content->text .= survey::get_block_html_for_teacher($COURSE->id, $this->instance->id, $USER->id);
             } else {
                 // If another teacher dont show block, except when editing.
-                return null;
+                if ($PAGE->user_is_editing()) {
+                    $this->content->text .= 'Survey for another teacher. Do not delete.';
+                    return $this->content;
+                } else {
+                    return null;
+                }
             }
         } else {
             // Student view.
