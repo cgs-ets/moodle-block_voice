@@ -130,9 +130,9 @@ class block_voice extends block_base {
                 return $this->content;
             }
             // If survey teacher, show stats.
-            if ($this->config->teacher == $USER->id) {
+            if ($this->config->teacher == $USER->id || has_capability('moodle/site:config', context_system::instance())) {
                 // Show progress bar of survey completions and link to page showing student completions.
-                $this->content->text .= survey::get_block_html_for_teacher($COURSE->id, $this->instance->id, $USER->id);
+                $this->content->text .= survey::get_block_html_for_teacher($COURSE->id, $this->instance->id, $this->config->teacher);
             } else {
                 // If another teacher dont show block, except when editing.
                 if ($PAGE->user_is_editing()) {
