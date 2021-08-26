@@ -137,18 +137,23 @@ class block_voice_edit_form extends block_edit_form {
             exit;
         }
 
+        //echo "<pre>"; var_export($data); exit;
+
         // Save the config to the teachersurvey and surveyquestions tables. These are convenience tables for reporting.
-        $DB->delete_records('block_voice_teachersurvey', array('blockinstanceid' => $this->block->instance->id));
+        $existing = $DB->get_records('block_voice_teachersurvey', array('blockinstanceid' => $this->block->instance->id));
+        foreach ($existing as $teachersurvey) {
+            $DB->delete_records('block_voice_teachersurvey', array('id' => $teachersurvey->id));
+            $DB->delete_records('block_voice_surveyquestions', array('teachersurveyid' => $teachersurvey->id));
+        }
         $teachersurvey = new \stdClass();
         $teachersurvey->blockinstanceid = $this->block->instance->id;
         $teachersurvey->title = $data->config_title;
-        $teachersurvey->open = $data->config_open;
-        $teachersurvey->group = $data->config_group;
+        $teachersurvey->surveyopen = $data->config_open;
+        $teachersurvey->surveygroup = $data->config_group;
         $teachersurvey->surveyid = $data->config_survey;
         $teachersurvey->userid = $data->config_teacher;
         $teachersurvey->id = $DB->insert_record('block_voice_teachersurvey', $teachersurvey);
         if ($teachersurvey->id) {
-            $DB->delete_records('block_voice_teachersurvey', array('teachersurveyid' => $teachersurvey->id));
             $questions = explode(',', $data->config_questionscsv);
             foreach($questions as $questionid) {
                 $surveyquestion = new \stdClass();

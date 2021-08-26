@@ -71,14 +71,13 @@
             var select = $(this);
             self.loadQuestions(select.val());
         });
+        //Initial question load.
+        self.rootel.find('select[name="config_survey"]').change();
 
         // Select a question checkbox.
         self.rootel.on('change', 'input.question', function () {
             self.generateQuestionCSV();
         });
-
-        //Initial load.
-        self.rootel.find('select[name="config_survey"]').change();
 
     };
 
@@ -98,6 +97,8 @@
                 },
                 done: function(html) {
                     self.rootel.find('#questions').html(html);
+                    //Initial setup mandatory questions.
+                    self.generateQuestionCSV();
                 },
                 fail: function(reason) {
                     Log.debug(reason);

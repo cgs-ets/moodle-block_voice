@@ -116,22 +116,6 @@
         }]);
     };
 
-    Survey.prototype.generateQuestionCSV = function () {
-        var self = this;
-
-        var input = self.rootel.find('input[name="config_questionscsv"]');
-
-        // Convert csv into array.
-        var questions = new Array();
-        self.rootel.find('input.question:checked').each(function(){
-            questions.push($(this).val());
-        });
-            
-
-        // Update hidden input.
-        input.val(questions.join());
-    };
-
     return {
         init: init
     };
