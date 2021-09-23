@@ -67,7 +67,9 @@ $string['visible'] = 'Survey is visible to teachers';
 $string['voice:addinstance'] = 'Add Student Voice block instance to a course';
 $string['voice:administer'] = 'Administer survey templates';
 $string['voice:myaddinstance'] = 'Add Student Voice block instance to the Dashboard';
-$string['voicesurveyconfig'] = 'Student Voice Surveys';
+$string['voicesurveyconfig'] = 'Student Voice survey admin';
 $string['setupfirst'] = 'Configure this block to select questions.';
 $string['survey'] = 'Survey';
 $string['surveyhasresponses'] = 'Survey already has responses. Changes to configuration are not permitted.';
+$string['surveyroles'] = 'User roles that can have surveys';
+

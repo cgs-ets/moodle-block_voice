@@ -24,27 +24,27 @@
     Template for the questions config page.
 }}
 <div class="form-group row fitem">
-        <div class="col-md-3"></div>
-        <div class="col-md-9">
-
-{{#sections}}
-    <div class="section">
-        <h5 class="header">{{name}}</h5>
-        {{#questions}}
-            <div class="form-check">
-                <label>
-                    <input type="checkbox" name="question_{{id}}" class="form-check-input question" value="{{id}}" id="id_question_{{id}}" {{#checked}}checked="checked"{{/checked}} {{#mandatory}}disabled="true"{{/mandatory}}>
-                    {{name}}
-                </label>
-            </div>
-        {{/questions}}
-        {{^questions.0}}
-            <p>No questions have been configured for this section.</p>
-        {{/questions.0}}
-    </fieldset>
-{{/sections}}
-{{^sections.0}}
-    <p>No questions have been configured for this survey.</p>
-{{/sections.0}}
-</div>
+    <div class="col-md-3"></div>
+    <div class="col-md-9">
+        <div class="alert alert-info">{{#str}} sectionnote, block_voice {{/str}} {{#str}} questionnote, block_voice {{/str}}</div>
+        {{#sections}}
+            <div class="section">
+                <h5 class="header">{{name}}</h5>
+                {{#questions}}
+                    <div class="form-check">
+                        <label>
+                            <input type="checkbox" name="question_{{id}}" class="form-check-input question" value="{{id}}" id="id_question_{{id}}" {{#checked}}checked="checked"{{/checked}} {{#mandatory}}disabled="true"{{/mandatory}}>
+                            {{name}}
+                        </label>
+                    </div>
+                {{/questions}}
+                {{^questions.0}}
+                    <p>No questions have been configured for this section.</p>
+                {{/questions.0}}
+            </fieldset>
+        {{/sections}}
+        {{^sections.0}}
+            <p>No questions have been configured for this survey.</p>
+        {{/sections.0}}
+    </div>
 </div>

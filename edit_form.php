@@ -19,7 +19,7 @@
  * Student Voice block configuration form definition
  *
  * @package    block_voice
- * @copyright  2021 Michael de Raadt
+ * @copyright  2021 Michael de Raadt, Michael Vangelovski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,6 +29,7 @@ require_once($CFG->dirroot.'/blocks/voice/lib.php');
 
 use \block_voice\controllers\setup;
 use \block_voice\controllers\survey;
+use \block_voice\utils;
 
 /**
  * Student Voice block config form class
@@ -45,10 +46,16 @@ class block_voice_edit_form extends block_edit_form {
         $PAGE->requires->js_call_amd('block_voice/editform', 'init', [
             'instanceid' => $this->block->instance->id,
         ]);
+        
+        // Add css.
+        $PAGE->requires->css(new moodle_url($CFG->wwwroot . '/blocks/voice/voice.css', array('nocache' => rand())));
+        $PAGE->add_body_class('voice-editform');
 
         // Show warning when at least one student has completed the survey.
         if (survey::has_responses($this->block->instance->id)) {
             \core\notification::error(get_string('surveyhasresponses', 'block_voice'));
+            $PAGE->add_body_class('voice-has-responses');
+            //$mform->addElement('static', '', '', '<div class="alert alert-danger alert-block">Survey already has responses. Changes to configuration are not permitted.</div>');
         }
 
         $sitecontext = CONTEXT::instance_by_id(CONTEXT_SYSTEM);
@@ -57,11 +64,8 @@ class block_voice_edit_form extends block_edit_form {
                 get_string('voicesurveyconfig', 'block_voice').'</a>');
         }
 
-        // Set block instance title.
-        $mform->addElement('text', 'config_title',
-                           get_string('config_title', 'block_voice'));
-        $mform->setDefault('config_title', get_string('pluginname', 'block_voice'));
-        $mform->setType('config_title', PARAM_TEXT);
+        
+        $mform->addElement('header', 'general', '');
 
         // Allow the survey to be opened/closed.
         $openoptions = array(
@@ -71,7 +75,13 @@ class block_voice_edit_form extends block_edit_form {
         $mform->addElement('select', 'config_open', get_string('openlabel', 'block_voice'), $openoptions, 'open');
 
         // Choose teacher (people who can add this block).
-        $teachers = get_users_by_capability($this->block->context, 'block/voice:addinstance');
+        //$teachers = get_users_by_capability($this->block->context, 'block/voice:addinstance');
+
+        $settings = get_config('block_voice');
+        if (empty($settings->surveyroles)) {
+            $settings->surveyroles = [3]; // "3" is editing teacher and default.
+        }
+        $teachers = utils::get_users_by_role_ids($COURSE->id, explode(',', $settings->surveyroles));
         $selectableteachers = array();
         foreach ($teachers as $id => $teacher) {
             $selectableteachers[$id] = fullname($teacher);
@@ -105,6 +115,14 @@ class block_voice_edit_form extends block_edit_form {
         }
         $mform->addElement('select', 'config_survey', get_string('survey', 'block_voice'), $selectablesurveys);
 
+        
+        // Set block instance title.
+        $mform->addElement('text', 'config_title',
+                           get_string('config_title', 'block_voice'), array('optional' => true));
+        $mform->setDefault('config_title', get_string('pluginname', 'block_voice'));
+        $mform->setType('config_title', PARAM_TEXT);
+        $mform->setAdvanced('config_title');
+
         // Survey sections/questions. Loaded via ajax.
         $mform->addElement('header', 'questionsheader', 'Questions');
         $mform->addElement('html', '<div id="questions"></div>');
@@ -112,8 +130,6 @@ class block_voice_edit_form extends block_edit_form {
         $mform->setType('config_questionscsv', PARAM_TEXT);
 
     }
-
-
 
     /**
      * Return submitted data.
@@ -128,22 +144,31 @@ class block_voice_edit_form extends block_edit_form {
         if (empty($data)) {
             return $data;
         }
+        
+        $existing = $DB->get_record('block_voice_teachersurvey', array('blockinstanceid' => $this->block->instance->id));
 
         // Prevent saving when at least one student has completed the survey.
         if (survey::has_responses($this->block->instance->id)) {
-            \core\notification::error(get_string('surveyhasresponses', 'block_voice'));
-            $courseurl = new moodle_url('/course/view.php', array('id' => $COURSE->id));
-            redirect($courseurl->out(false));
-            exit;
+            // Only save title changes.
+            $existing->title = $data->config_title;
+            $existing->surveyopen = $data->config_open;
+            $DB->update_record('block_voice_teachersurvey', $existing);
+
+            // Disallow changing of other data.
+            $data->config_group = $existing->surveygroup;
+            $data->config_survey = $existing->surveyid;
+            $data->config_teacher = $existing->userid;
+            $questions = $DB->get_records('block_voice_surveyquestions', array('teachersurveyid' => $existing->id));
+            $data->config_questionscsv = implode(',', array_column($questions, 'id'));
+            return $data;
         }
 
         //echo "<pre>"; var_export($data); exit;
 
         // Save the config to the teachersurvey and surveyquestions tables. These are convenience tables for reporting.
-        $existing = $DB->get_records('block_voice_teachersurvey', array('blockinstanceid' => $this->block->instance->id));
-        foreach ($existing as $teachersurvey) {
-            $DB->delete_records('block_voice_teachersurvey', array('id' => $teachersurvey->id));
-            $DB->delete_records('block_voice_surveyquestions', array('teachersurveyid' => $teachersurvey->id));
+        if ($existing) {
+            $DB->delete_records('block_voice_teachersurvey', array('id' => $existing->id));
+            $DB->delete_records('block_voice_surveyquestions', array('teachersurveyid' => $existing->id));
         }
         $teachersurvey = new \stdClass();
         $teachersurvey->blockinstanceid = $this->block->instance->id;

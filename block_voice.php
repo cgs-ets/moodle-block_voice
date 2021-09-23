@@ -63,6 +63,12 @@ class block_voice extends block_base {
     public function specialization() {
         if (isset($this->config->title) && trim($this->config->title) != '') {
             $this->title = format_string($this->config->title);
+        } else {
+            if (isset($this->config->teacher)) {
+                $teacher = \core_user::get_user($this->config->teacher);
+
+                $this->title = format_string(fullname($teacher) . ' survey');
+            }
         }
     }
 

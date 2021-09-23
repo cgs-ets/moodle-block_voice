@@ -33,7 +33,7 @@ if ($ADMIN->fulltree) {
             get_string('voicesurveyconfig', 'block_voice').'</a></li></ul>'));
     }
 
-    $settings->add(new admin_setting_configcolourpicker('block_voice/completedcolour',
+    /*$settings->add(new admin_setting_configcolourpicker('block_voice/completedcolour',
         get_string('completedcolour_title', 'block_voice'),
         get_string('completedcolour_descr', 'block_voice'),
         get_string('completedcolour', 'block_voice'),
@@ -45,5 +45,20 @@ if ($ADMIN->fulltree) {
         get_string('notcompletedcolour_descr', 'block_voice'),
         get_string('notcompletedcolour', 'block_voice'),
         null )
+    );*/
+
+    $roles = array();
+    $rows = $DB->get_records_sql(
+           "SELECT r.id, r.shortname
+              FROM {role} r
+        INNER JOIN {role_context_levels} rl
+                ON rl.roleid = r.id
+             WHERE contextlevel = 50"
     );
+    foreach ($rows as $role) {
+        $roles[$role->id] = $role->shortname;
+    }
+    $settings->add(new admin_setting_configmultiselect('block_voice/surveyroles',
+        get_string('surveyroles', 'block_voice'), '',
+        array(3), $roles)); // "3" is editing teacher, default.
 }

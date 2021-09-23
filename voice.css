@@ -239,10 +239,11 @@
   margin: 0;
   padding: 0 0 53px;
   display: block;
+  font-size: 20px;
 }
 #page-blocks-voice-studentsurvey .survey .thumbs li {
   display: inline-block;
-  width: 49%;
+  width: 19%;
   text-align: center;
   vertical-align: top;
 }
@@ -326,4 +327,20 @@
 #page-blocks-voice-studentcompletions .studentcompletions .buttons {
   padding: 20px 20px;
   text-align: center;
+}
+.voice-editform.voice-has-responses #fitem_id_config_teacher,
+.voice-editform.voice-has-responses #fitem_id_config_group,
+.voice-editform.voice-has-responses #fitem_id_config_survey,
+.voice-editform.voice-has-responses #questions {
+  pointer-events: none;
+}
+.voice-editform.voice-has-responses #fitem_id_config_teacher input,
+.voice-editform.voice-has-responses #fitem_id_config_group input,
+.voice-editform.voice-has-responses #fitem_id_config_survey input,
+.voice-editform.voice-has-responses #questions input,
+.voice-editform.voice-has-responses #fitem_id_config_teacher select,
+.voice-editform.voice-has-responses #fitem_id_config_group select,
+.voice-editform.voice-has-responses #fitem_id_config_survey select,
+.voice-editform.voice-has-responses #questions select {
+  background: #ddd;
 }

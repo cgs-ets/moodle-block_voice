@@ -81,9 +81,14 @@ class survey {
         ));
 
         list($numstudents, $numcompleted, $numinprogress, $numnotstarted) = static::get_teacher_survey_stats($courseid, $instanceid);
-        $percentcompleted = ($numcompleted / $numstudents) * 100;
-        $percentinprogress = ($numinprogress / $numstudents) * 100;
-        $percentnotstarted = ($numnotstarted / $numstudents) * 100;
+        $percentcompleted = 0;
+        $percentinprogress = 0;
+        $percentnotstarted = 0;
+        if ($numstudents) {
+            $percentcompleted = ($numcompleted / $numstudents) * 100;
+            $percentinprogress = ($numinprogress / $numstudents) * 100;
+            $percentnotstarted = ($numnotstarted / $numstudents) * 100;
+        }
 
         // Render the block.
         return $OUTPUT->render_from_template('block_voice/teacher_view', array(
@@ -109,6 +114,7 @@ class survey {
         
         // Export for template.
         $data = array(
+            'instanceid' => $instanceid,
             'userid' => $userid,
             'courseid' => $courseid,
             'config' => $config,
@@ -357,6 +363,30 @@ class survey {
     }
 
     /**
+     * Sort questions by defined order.
+     *
+     * @return array
+     */
+    public static function sort_by_order(&$config, $questionorder) {
+        global $DB;
+        if (empty($questionorder)) {
+            return;
+        }
+
+        if (!isset($config->survey->questions)) {
+            return;
+        }
+        
+        $questions = array();
+        foreach ($config->survey->questions as $question) {
+            $questions[$question->id] = $question;
+        }
+
+        $config->survey->questions = array_values(array_replace(array_flip(explode(',', $questionorder)), $questions));        
+    }
+
+
+    /**
      * Add some flesh to the config.
      *
      * @return array
@@ -375,6 +405,11 @@ class survey {
         // Export questions.
         if (isset($data['config']->survey->questions)) {
             foreach ($data['config']->survey->questions as &$question) {
+                // Rewrite pluginfile urls.
+                $context = \context_system::instance();
+                $question->questiontext = file_rewrite_pluginfile_urls($question->questiontext, 'pluginfile.php', $context->id,
+	        		'block_voice', 'questiontext', $question->id);
+
                 // Add answers to questions.
                 $question->answers = array();
                 if ($data['config']->survey->islikert) {
@@ -401,11 +436,40 @@ class survey {
             }
         }
 
-        // Randomise question order.
-        if ($randomise) {
-            static::randomise_questions($data['config']);
+        // Check if there is an overall survey response yet.
+        $surveyresponse = $DB->get_record('block_voice_surveyresponse', array(
+            'blockinstanceid' => $data['instanceid'],
+            'userid' => $data['userid'],
+        ));
+        if (empty($surveyresponse)) {
+            $timenow = time();
+            $surveyresponse = new \stdClass();
+            $surveyresponse->blockinstanceid = $data['instanceid'];
+            $surveyresponse->userid = $data['userid'];
+            $surveyresponse->timecreated = $timenow;
+            $surveyresponse->timecompleted = 0;
+            $surveyresponse->timemodified = $timenow;
+            $surveyresponse->questionorder = '';
+            if ($randomise) {
+                static::randomise_questions($data['config']);
+                $questionids = array_column($data['config']->survey->questions, 'id');
+                $surveyresponse->questionorder = implode(',', $questionids);
+            }
+            $surveyresponse->id = $DB->insert_record('block_voice_surveyresponse', $surveyresponse);
+        } else {
+            if ($randomise && empty($surveyresponse->questionorder)) {
+                static::randomise_questions($data['config']);
+                $questionids = array_column($data['config']->survey->questions, 'id');
+                $surveyresponse->questionorder = implode(',', $questionids);
+                $DB->update_record('block_voice_surveyresponse', $surveyresponse);
+            }
         }
 
+        // Sort questions by initial question order.
+        if ($randomise && $surveyresponse->questionorder) {
+            static::sort_by_order($data['config'], $surveyresponse->questionorder);
+        }
+        
         return $data['config'];
     }
 

@@ -44,4 +44,42 @@ class utils {
         exit;
     }
 
+    /**
+     * Helper function to get enrolled users.
+     *
+     * @param int $courseid
+     * @param string $shortname
+     * @return int[]
+     */
+    public static function get_users_by_role_shortname($courseid, $shortname) {
+        global $DB;
+        $context = \context_course::instance($courseid);
+        $roleid = $DB->get_field('role', 'id', array('shortname'=> $shortname));
+        $users = get_role_users($roleid, $context, false, 'u.id, u.firstname', 'u.firstname'); //last param is sort by. 
+        return array_map('intval', array_column($users, 'id'));
+    }
+
+    /**
+     * Helper function to get enrolled users.
+     *
+     * @param int $courseid
+     * @param array $roleids
+     * @return int[]
+     */
+    public static function get_users_by_role_ids($courseid, $roleids) {
+        global $DB;
+        $context = \context_course::instance($courseid);
+        $users = array();
+        foreach ($roleids as $roleid) {
+            $roleusers = get_role_users($roleid, $context, false, 'u.id, u.firstname', 'u.firstname'); //last param is sort by. 
+            foreach ($roleusers as $roleuser) {
+                $id = intval($roleuser->id);
+                $users[$id] = \core_user::get_user($id);
+            }
+        }
+        return $users;
+    }
+
+   
+
 }

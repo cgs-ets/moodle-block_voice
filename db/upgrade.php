@@ -44,5 +44,27 @@ defined('MOODLE_INTERNAL') or die();
  * @param object $block
  */
 function xmldb_block_voice_upgrade($oldversion, $block) {
+
+    global $DB;
+
+    $dbman = $DB->get_manager();
+
+    if ($oldversion < 2021092300) {
+
+        // Define field questionorder to be added to block_voice_surveyresponse.
+        $table = new xmldb_table('block_voice_surveyresponse');
+        $field = new xmldb_field('questionorder', XMLDB_TYPE_TEXT, null, null, null, null, null, 'timemodified');
+
+        // Conditionally launch add field questionorder.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Voice savepoint reached.
+        upgrade_block_savepoint(true, 2021092300, 'voice');
+    }
+
+
     return true;
 }
+

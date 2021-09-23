@@ -23,6 +23,8 @@
  */
 
 defined('MOODLE_INTERNAL') || die;
+
+require_once($CFG->libdir.'/filelib.php');
 require_once($CFG->libdir.'/formslib.php');
 
 // Global defaults.
@@ -55,11 +57,23 @@ const LIKERT_ANSWERS = array(
 const THUMBS_ANSWERS = array(
     '1' => array(
         'value' => '1',
-        'name' => '<i class="fa fa-thumbs-down" aria-hidden="true"></i>',
+        'name' => '<i class="fa fa-thumbs-down" aria-hidden="true"></i><i class="fa fa-thumbs-down" aria-hidden="true"></i>',
     ),
     '2' => array(
         'value' => '2',
+        'name' => '<i class="fa fa-thumbs-down" aria-hidden="true"></i>',
+    ),
+    '3' => array(
+        'value' => '3',
+        'name' => '<i style="transform: rotate(-90deg)" class="fa fa-thumbs-down" aria-hidden="true"></i>',
+    ),
+    '4' => array(
+        'value' => '4',
         'name' => '<i class="fa fa-thumbs-up" aria-hidden="true"></i>',
+    ),
+    '5' => array(
+        'value' => '5',
+        'name' => '<i class="fa fa-thumbs-up" aria-hidden="true"></i><i class="fa fa-thumbs-up" aria-hidden="true"></i>',
     ),
 );
 
@@ -84,4 +98,42 @@ function block_voice_load_user_display_info(&$user) {
     // Profile url.
     $user->profileurl = new \moodle_url('/user/profile.php', array('id' => 2));
     $user->profileurl = $user->profileurl->out(false);
+}
+
+/**
+ * Serves the plugin attachments.
+ *
+ * @package block_voice
+ * @category files
+ * @param stdClass $course course object
+ * @param stdClass $birecordorcm course module object
+ * @param stdClass $context context object
+ * @param string $filearea file area
+ * @param array $args extra arguments
+ * @param bool $forcedownload whether or not force download
+ * @param array $options additional options affecting the file serving
+ * @return bool false if file not found, does not return if found - justsend the file
+ */
+function block_voice_pluginfile($course, $birecordorcm, $context, $filearea, $args, $forcedownload, array $options = array()) {
+    global $DB, $CFG;
+
+    if ($filearea !== 'questiontext') {
+        send_file_not_found();
+    }
+
+    $fs = get_file_storage();
+
+    $itemid = array_shift($args);
+    $filename = array_pop($args);
+    $filepath = $args ? '/' . implode('/', $args) . '/' : '/';
+
+    if (!$file = $fs->get_file($context->id, 'block_voice', 'questiontext', $itemid, $filepath, $filename)
+        or $file->is_directory()) {
+        send_file_not_found();
+    }
+
+    \core\session\manager::write_close();
+
+    // Set the caching time for five days.
+    send_stored_file($file, 120 * 60 * 60, 0, true, $options);
 }
