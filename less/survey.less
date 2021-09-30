@@ -168,11 +168,19 @@
                 label {
                     width: 100%;
                     cursor: pointer;
-                    background-color: #ccc;
                     padding-bottom: 13px;
+                    img {
+                        transition: all .2s ease-out;
+                        width: 70px;
+                    }
                     &:hover {
-                        color: #005CC8;
-                        background-color: #bfbfbf;
+                        img {
+                            -webkit-transform: rotate(30deg);
+                            -moz-transform: rotate(30deg);
+                            -ms-transform: rotate(30deg);
+                            -o-transform: rotate(30deg);
+                            transform: rotate(30deg);
+                        }
                     }
                     &[data-status="saving"] {
                         color: #005CC8;

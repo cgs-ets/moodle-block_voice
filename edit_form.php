@@ -128,6 +128,7 @@ class block_voice_edit_form extends block_edit_form {
         $mform->addElement('html', '<div id="questions"></div>');
         $mform->addElement('hidden', 'config_questionscsv');
         $mform->setType('config_questionscsv', PARAM_TEXT);
+        $mform->setExpanded('questionsheader');
 
     }
 

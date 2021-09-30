@@ -250,12 +250,18 @@
 #page-blocks-voice-studentsurvey .survey .thumbs li label {
   width: 100%;
   cursor: pointer;
-  background-color: #ccc;
   padding-bottom: 13px;
 }
-#page-blocks-voice-studentsurvey .survey .thumbs li label:hover {
-  color: #005CC8;
-  background-color: #bfbfbf;
+#page-blocks-voice-studentsurvey .survey .thumbs li label img {
+  transition: all 0.2s ease-out;
+  width: 70px;
+}
+#page-blocks-voice-studentsurvey .survey .thumbs li label:hover img {
+  -webkit-transform: rotate(30deg);
+  -moz-transform: rotate(30deg);
+  -ms-transform: rotate(30deg);
+  -o-transform: rotate(30deg);
+  transform: rotate(30deg);
 }
 #page-blocks-voice-studentsurvey .survey .thumbs li label[data-status="saving"] {
   color: #005CC8;

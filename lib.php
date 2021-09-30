@@ -57,23 +57,23 @@ const LIKERT_ANSWERS = array(
 const THUMBS_ANSWERS = array(
     '1' => array(
         'value' => '1',
-        'name' => '<i class="fa fa-thumbs-down" aria-hidden="true"></i><i class="fa fa-thumbs-down" aria-hidden="true"></i>',
+        'name' => '<img src="./images/icon_1_doublethumbsdown.svg" alt="Double thumbs down">',
     ),
     '2' => array(
         'value' => '2',
-        'name' => '<i class="fa fa-thumbs-down" aria-hidden="true"></i>',
+        'name' => '<img src="./images/icon_2_thumbdown.svg" alt="Thumb down">',
     ),
     '3' => array(
         'value' => '3',
-        'name' => '<i style="transform: rotate(-90deg)" class="fa fa-thumbs-down" aria-hidden="true"></i>',
+        'name' => '<img src="./images/icon_3_neutral.svg" alt="Neutral">',
     ),
     '4' => array(
         'value' => '4',
-        'name' => '<i class="fa fa-thumbs-up" aria-hidden="true"></i>',
+        'name' => '<img src="./images/icon_4_thumbup.svg" alt="Thumb up">',
     ),
     '5' => array(
         'value' => '5',
-        'name' => '<i class="fa fa-thumbs-up" aria-hidden="true"></i><i class="fa fa-thumbs-up" aria-hidden="true"></i>',
+        'name' => '<img src="./images/icon_5_doublethumbsup.svg" alt="Double thumbs up">',
     ),
 );
 
