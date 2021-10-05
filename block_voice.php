@@ -61,13 +61,14 @@ class block_voice extends block_base {
      * @return bool
      */
     public function specialization() {
-        if (isset($this->config->title) && trim($this->config->title) != '') {
+        if (isset($this->config->title) && trim($this->config->title) != '' && trim($this->config->title) != get_string('pluginname', 'block_voice')) {
             $this->title = format_string($this->config->title);
         } else {
             if (isset($this->config->teacher)) {
                 $teacher = \core_user::get_user($this->config->teacher);
-
                 $this->title = format_string(fullname($teacher) . ' survey');
+            } else {
+                $this->title = get_string('pluginname', 'block_voice');
             }
         }
     }
