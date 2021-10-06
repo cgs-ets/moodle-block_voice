@@ -59,7 +59,7 @@ class survey {
         $surveyinstance->open = $surveyinstance->surveyopen;
         $surveyinstance->group = $surveyinstance->surveygroup;
         $surveyinstance->teacher = $surveyinstance->userid;
-        $surveyinstance->title = static::decorate_title($title, $surveyinstance->teacher);
+        $surveyinstance->title = static::decorate_title($surveyinstance->title, $surveyinstance->teacher);
 
         return $surveyinstance;
     }
@@ -84,6 +84,12 @@ class survey {
         
         $teachersurvey->questionscsv = implode(',', array_column($teachersurveyquestions, 'questionid'));
 
+        // Backfill some other props.
+        $teachersurvey->open = $teachersurvey->surveyopen;
+        $teachersurvey->group = $teachersurvey->surveygroup;
+        $teachersurvey->teacher = $teachersurvey->userid;
+        $teachersurvey->title = static::decorate_title($teachersurvey->title, $teachersurvey->teacher);
+                
         return $teachersurvey;
     }
 
