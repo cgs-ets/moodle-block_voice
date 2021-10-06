@@ -80,9 +80,9 @@ class survey {
         $sql = "SELECT *
                   FROM {block_voice_surveyquestions}
                  WHERE teachersurveyid = ?";
-        $teachersurveyquestions = $DB->get_record_sql($sql, array($teachersurvey->id));
+        $teachersurveyquestions = $DB->get_records_sql($sql, array($teachersurvey->id));
         
-        $teachersurvey->questionscsv = implode(',', $teachersurveyquestions);
+        $teachersurvey->questionscsv = implode(',', array_column($teachersurveyquestions, 'questionid'));
 
         return $teachersurvey;
     }
