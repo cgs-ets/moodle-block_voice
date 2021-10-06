@@ -26,7 +26,6 @@
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot.'/blocks/voice/lib.php');
 
-use \block_voice\controllers\setup;
 use \block_voice\controllers\survey;
 
 $courseid = required_param('course', PARAM_INT);
@@ -48,8 +47,8 @@ $studentcompletionsurl = new moodle_url('/blocks/voice/studentcompletions.php', 
 ));
 $PAGE->set_url($studentcompletionsurl);
 
-$blockinstance = setup::get_block_instance($instanceid);
-$title = $blockinstance->config->title;
+$surveyinstance = survey::get_survey_instance($instanceid);
+$title = $surveyinstance->title;
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
 $PAGE->navbar->add($course->shortname, new moodle_url('/course/view.php', array('id' => $courseid)));

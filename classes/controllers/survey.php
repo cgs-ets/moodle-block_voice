@@ -36,6 +36,63 @@ use \moodle_url;
 class survey {
 
     /**
+     * Get's the survey config without sections.
+     *
+     * @param  int  $instanceid. Block instance id.
+     * @return array
+     */
+    public static function get_survey_instance_expanded($instanceid) {
+        global $DB, $OUTPUT;
+
+        // Get selected questions for the block instance and mark the questions as checked.
+        $surveyinstance = static::get_survey_instance($instanceid);
+        $selected = explode(',', $surveyinstance->questionscsv);
+
+        // Get survey.
+        $survey = setup::get_survey($surveyinstance->surveyid);
+
+        // Get questions.
+        $survey->questions = setup::get_questions_by_survey($survey->id, $selected);
+        $surveyinstance->survey = $survey;
+
+        return $surveyinstance;
+    }
+
+    /**
+     * Get a single response.
+     *
+     * @return array
+     */
+    public static function get_survey_instance($instanceid) {
+        global $DB;
+
+        $sql = "SELECT *
+                  FROM {block_voice_teachersurvey}
+                 WHERE blockinstanceid = ?";
+        $teachersurvey = $DB->get_record_sql($sql, array($instanceid));
+
+        $sql = "SELECT *
+                  FROM {block_voice_surveyquestions}
+                 WHERE teachersurveyid = ?";
+        $teachersurveyquestions = $DB->get_record_sql($sql, array($teachersurvey->id));
+        
+        $teachersurvey->questionscsv = implode(',', $teachersurveyquestions);
+
+        return $teachersurvey;
+    }
+
+    /**
+     * Get's the questions by block instance id.
+     *
+     * @param  int  $instanceid
+     * @return array
+     */
+    public static function get_survey_question_ids($instanceid) {
+        $surveyinstance = static::get_survey_instance($instanceid);
+        return explode(',', $surveyinstance->questionscsv);
+    }
+
+    /**
      * Render the block for a student user.
      *
      * @return string
@@ -110,7 +167,7 @@ class survey {
         global $OUTPUT;
 
         // Get block questions.
-        $config = setup::get_survey_config_flat($instanceid);
+        $config = static::get_survey_instance_expanded($instanceid);
         
         // Export for template.
         $data = array(
@@ -131,12 +188,12 @@ class survey {
     public static function get_student_completions_html($courseid, $instanceid) {
         global $OUTPUT;
 
-        $blockinstance = setup::get_block_instance($instanceid);
+        $surveyinstance = survey::get_survey_instance($instanceid);
         $students = static::get_student_completion_data($courseid, $instanceid);
 
         // Export for template.
         $data = array(
-            'config' => $blockinstance->config,
+            'config' => $surveyinstance,
             'students' => $students,
             'courseid' => $courseid,
         );
@@ -151,7 +208,7 @@ class survey {
 
 
     public static function get_survey_teacher($instanceid) {
-        $config = setup::get_survey_config_flat($instanceid);
+        $config = static::get_survey_instance_expanded($instanceid);
         $teacher = \core_user::get_user($config->teacher);
         block_voice_load_user_display_info($teacher);
         return $teacher;
@@ -183,7 +240,7 @@ class survey {
         global $DB;
 
         // Get block questions.
-        $questions = setup::get_block_question_ids($instanceid);
+        $questions = setup::get_survey_question_ids($instanceid);
 
         // Look for questions that have not had a response.
         foreach ($questions as $questionid) {
@@ -223,7 +280,7 @@ class survey {
         global $DB;
 
         // Get block questions.
-        $questions = setup::get_block_question_ids($instanceid);
+        $questions = setup::get_survey_question_ids($instanceid);
 
         // Get responses.
         $responses = array();
@@ -246,7 +303,7 @@ class survey {
         global $DB;
 
         $context = \context_course::instance($courseid);
-        $config = setup::get_survey_config_flat($instanceid);
+        $config = static::get_survey_instance_expanded($instanceid);
 
         // Get survey students.
         $users = array();
@@ -300,7 +357,7 @@ class survey {
         global $DB;
 
         $context = \context_course::instance($courseid);
-        $config = setup::get_survey_config_flat($instanceid);
+        $config = static::get_survey_instance_expanded($instanceid);
 
         // Get survey students.
         $users = array();

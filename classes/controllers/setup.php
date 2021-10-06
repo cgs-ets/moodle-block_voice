@@ -33,26 +33,15 @@ require_once($CFG->dirroot.'/blocks/voice/lib.php');
 class setup {
 
     /**
-     * Get's the questions (including sections) for a survey.
+     * Get's the block instance.
      *
      * @param  int  $instanceid
      * @return block_instance
      */
     public static function get_block_instance($instanceid) {
         global $DB;
-        $data = $DB->get_record('block_instances', array('id' => $instanceid), '*', MUST_EXIST); 
+        $data = $DB->get_record('block_instances', array('id' => $instanceid), '*', MUST_EXIST);
         return block_instance('voice', $data);
-    }
-
-    /**
-     * Get's the questions by block instance id.
-     *
-     * @param  int  $instanceid
-     * @return array
-     */
-    public static function get_block_question_ids($instanceid) {
-        $blockinstance = static::get_block_instance($instanceid);
-        return explode(',', $blockinstance->config->questionscsv);
     }
 
     /**
@@ -61,7 +50,7 @@ class setup {
      * @param  int  $surveyid
      * @return array
      */
-    public static function get_survey_config($instanceid) {
+    /*public static function get_survey_config($instanceid) {
         global $DB, $OUTPUT;
 
         // Get selected questions for the block instance and mark the questions as checked.
@@ -87,33 +76,7 @@ class setup {
         $survey->sections = $sections;
         $config->survey = $survey;
         return $config;
-    }
-
-
-    /**
-     * Get's the survey config without sections.
-     *
-     * @param  int  $instanceid. Block instance id.
-     * @return array
-     */
-    public static function get_survey_config_flat($instanceid) {
-        global $DB, $OUTPUT;
-
-        // Get selected questions for the block instance and mark the questions as checked.
-        $blockinstance = static::get_block_instance($instanceid);
-        $config = $blockinstance->config;
-        $selected = explode(',', $config->questionscsv);
-
-        // Get survey.
-        $survey = static::get_survey($config->survey);
-
-        // Get questions.
-        $survey->questions = static::get_questions_by_survey($survey->id, $selected);
-        $config->survey = $survey;
-        return $config;
-    }
-
-
+    }*/
 
 
     /**
