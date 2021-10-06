@@ -59,6 +59,7 @@ class survey {
         $surveyinstance->open = $surveyinstance->surveyopen;
         $surveyinstance->group = $surveyinstance->surveygroup;
         $surveyinstance->teacher = $surveyinstance->userid;
+        $surveyinstance->title = static::decorate_title($title, $surveyinstance->teacher);
 
         return $surveyinstance;
     }
@@ -84,6 +85,27 @@ class survey {
         $teachersurvey->questionscsv = implode(',', array_column($teachersurveyquestions, 'questionid'));
 
         return $teachersurvey;
+    }
+
+    /**
+     * Get's the survey title
+     *
+     * @param  int  $title
+     * @param  int  $teacherid
+     * @return string
+     */
+    public function decorate_title($title, $teacherid) {
+        if (isset($title) && trim($title) != '' && trim($title) != get_string('pluginname', 'block_voice')) {
+            $title = format_string($title);
+        } else {
+            if (isset($teacherid)) {
+                $teacher = \core_user::get_user($teacherid);
+                $title = format_string(fullname($teacher) . ' survey');
+            } else {
+                $title = get_string('pluginname', 'block_voice');
+            }
+        }
+        return $title;
     }
 
     /**
@@ -578,6 +600,7 @@ class survey {
 
         // Check for answer.
         $questionresponse = $DB->get_record('block_voice_questionresponse', array(
+            'surveyresponseid' => $surveyresponse->id,
             'questionid' => $questionid,
             'userid' => $USER->id,
         ));
