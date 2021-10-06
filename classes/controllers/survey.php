@@ -240,7 +240,7 @@ class survey {
         global $DB;
 
         // Get block questions.
-        $questions = setup::get_survey_question_ids($instanceid);
+        $questions = static::get_survey_question_ids($instanceid);
 
         // Look for questions that have not had a response.
         foreach ($questions as $questionid) {
@@ -280,7 +280,7 @@ class survey {
         global $DB;
 
         // Get block questions.
-        $questions = setup::get_survey_question_ids($instanceid);
+        $questions = static::get_survey_question_ids($instanceid);
 
         // Get responses.
         $responses = array();
