@@ -55,6 +55,12 @@ class survey {
         $survey->questions = setup::get_questions_by_survey($survey->id, $selected);
         $surveyinstance->survey = $survey;
 
+        // Backfil some props.
+        $surveyinstance->open = $surveyinstance->surveyopen;
+        $surveyinstance->group = $surveyinstance->surveygroup;
+        $surveyinstance->survey = $surveyinstance->surveyid;
+        $surveyinstance->teacher = $surveyinstance->userid;
+
         return $surveyinstance;
     }
 
@@ -206,7 +212,9 @@ class survey {
     }
 
 
-
+    /**
+     * Get core_user instance for teahcer with some decoration based on block instance id.
+     */
     public static function get_survey_teacher($instanceid) {
         $config = static::get_survey_instance_expanded($instanceid);
         $teacher = \core_user::get_user($config->teacher);
