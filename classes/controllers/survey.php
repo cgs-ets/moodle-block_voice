@@ -55,10 +55,9 @@ class survey {
         $survey->questions = setup::get_questions_by_survey($survey->id, $selected);
         $surveyinstance->survey = $survey;
 
-        // Backfil some props.
+        // Backfill some other props.
         $surveyinstance->open = $surveyinstance->surveyopen;
         $surveyinstance->group = $surveyinstance->surveygroup;
-        $surveyinstance->survey = $surveyinstance->surveyid;
         $surveyinstance->teacher = $surveyinstance->userid;
 
         return $surveyinstance;
