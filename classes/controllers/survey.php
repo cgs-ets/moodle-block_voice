@@ -100,7 +100,7 @@ class survey {
      * @param  int  $teacherid
      * @return string
      */
-    public function decorate_title($title, $teacherid) {
+    public static function decorate_title($title, $teacherid) {
         if (isset($title) && trim($title) != '' && trim($title) != get_string('pluginname', 'block_voice')) {
             $title = format_string($title);
         } else {
